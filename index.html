@@ -69,7 +69,9 @@ details summary{cursor:pointer;font-weight:800}.answer-row{display:flex;justify-
   <div class="card">
     <h2>メニュー</h2>
     <div class="grid">
-      <button onclick="navigate('review')">⚔️ 戦闘を記録</button>
+      <h3 style="grid-column:1/-1;margin:4px 0 0">⚔️ 戦闘を記録</h3>
+      <button onclick="startReview('normal')">📝 通常記録（15問）</button>
+      <button onclick="startReview('simple')">⚡ 簡易記録（10問）</button>
       <button onclick="navigate('growth')">📊 成長を見る</button>
       <button onclick="navigate('weakness')">🧠 現状分析・対策</button>
       <button onclick="navigate('practice')">🏋️ 練習する</button>
@@ -154,6 +156,7 @@ const APP_VERSION=5;
 const RECORD_KEY='apex_super_coach_records_v5';
 const DRAFT_KEY='apex_super_coach_draft_v5';
 const GOAL_HISTORY_KEY='apex_super_coach_goal_history_v5';
+const LEGENDS=['オルター','アッシュ','アクセル','バリスティック','バンガロール','ブラッドハウンド','カタリスト','コースティック','コンジット','クリプト','ヒューズ','ジブラルタル','ホライゾン','ライフライン','ローバ','マッドマギー','ミラージュ','ニューキャッスル','オクタン','パスファインダー','ランパート','レヴナント','シア','スパロー','ヴァルキリー','ヴァンテージ','ワットソン','レイス'];
 
 const QUESTIONS=[
  {id:'cover',title:'遮蔽を使って戦えた？',importance:3,group:'立ち回り'},
@@ -179,8 +182,78 @@ const QUESTIONS=[
  {id:'coverReceived',title:'自分も味方からカバーをもらえる位置で戦えた？',importance:3,group:'連携'},
  {id:'syncFire',title:'味方と同時に撃ち始められた？',importance:3,group:'連携'},
  {id:'multiAngle',title:'1人で複数人の射線を受けなかった？',importance:3,group:'立ち回り'},
- {id:'engage',title:'有利を取ったあと、詰める判断ができた？',importance:2,group:'判断'}
+ {id:'engage',title:'有利を取ったあと、詰める判断ができた？',importance:2,group:'判断',weight:3},
+ {id:'lowEnemyPush',title:'ローになった敵を詰める判断ができた？',importance:3,group:'判断',weight:5},
+ {id:'stayWithTeam',title:'味方から離れすぎず、すぐカバーできる距離で戦えた？',importance:3,group:'チームプレイ',weight:5},
+ {id:'preventEnemySplit',title:'敵に分断されず、味方とまとまって戦えた？',importance:3,group:'チームプレイ',weight:5},
+ {id:'expandWithSupport',title:'展開した後も味方とカバーし合える位置を保てた？',importance:3,group:'展開',weight:5},
+ {id:'retreatOutnumbered',title:'人数不利や複数射線の状況で、無理せず引けた？',importance:3,group:'生存判断',weight:5},
+ {id:'checkEnemyLine',title:'敵の射線を確認してから体を出せた？',importance:3,group:'射線',weight:5},
+ {id:'createOwnAngle',title:'味方と被らない角度から自分の射線を作れた？',importance:2,group:'位置取り',weight:3},
+ {id:'checkBeforeRepeek',title:'リピークする前に敵の位置や味方の状況を確認できた？',importance:3,group:'リピーク',weight:5},
+ {id:'grenadeMoveEnemy',title:'グレネードで敵を遮蔽から動かし、味方が撃てる状況を作れた？',importance:2,group:'グレネード',weight:3},
+ {id:'makeSpace',title:'味方が動きやすくなるスペースを作れた？',importance:3,group:'チームプレイ',weight:5},
+ {id:'tradeDamage',title:'味方が撃たれた時に、すぐ撃ち返してカバーできた？',importance:3,group:'カバー',weight:5},
+ {id:'chooseTargetTogether',title:'味方と狙う敵を合わせ、短時間でダメージを集中できた？',importance:3,group:'フォーカス',weight:5},
+ {id:'coverBeforeStart',title:'撃ち合いを始める前に、すぐ隠れられる遮蔽を確保できた？',importance:3,group:'遮蔽',weight:5},
+ {id:'reloadBehindCover',title:'リロード中に遮蔽へ隠れ、味方の射線も保てた？',importance:2,group:'遮蔽',weight:2},
+ {id:'secureKnockThenReset',title:'ダウンを取った後、追いすぎず回復や立て直しを判断できた？',importance:3,group:'リセット',weight:5},
+ {id:'stopWhenDisadvantaged',title:'アーマー差や位置不利がある時、戦闘を続けない判断ができた？',importance:3,group:'生存判断',weight:5},
+ {id:'pushWhenKnockAdvantage',title:'人数有利を作った時、味方とタイミングを合わせて詰められた？',importance:3,group:'判断',weight:5},
+ {id:'fastCoverAfterDamage',title:'大きく削られた直後、すぐ遮蔽に入って被弾を止められた？',importance:3,group:'遮蔽',weight:5},
+ {id:'crossfireAngle',title:'味方と別角度を作り、敵に複数方向を意識させられた？',importance:2,group:'位置取り',weight:3},
+ {id:'checkEscapeRoute',title:'戦闘を始める前に、危険な時の退路を確保できた？',importance:2,group:'生存判断',weight:2},
+ {id:'enemyRotateAwareness',title:'敵の移動先や漁夫の接近を意識して位置を選べた？',importance:2,group:'立ち回り',weight:2},
+ {id:'abilitySupportTeam',title:'アビリティを自分だけでなく味方の攻めや退きにも使えた？',importance:2,group:'チームプレイ',weight:3},
+ {id:'avoidThirdParty',title:'漁夫が来る前に戦闘を切り上げる判断ができた？',importance:2,group:'生存判断',weight:2},
+ {id:'protectHealTime',title:'回復中の味方を守る位置取りや声かけができた？',importance:3,group:'カバー',weight:5},
+ {id:'callEnemyFocus',title:'狙う敵や攻めるタイミングを味方に短く伝えられた？',importance:2,group:'フォーカス',weight:2},
+ {id:'pathExpandSafe',title:'パスファインダーで展開した後、孤立せず味方とカバーし合えた？',importance:3,group:'展開',weight:5,legend:'パスファインダー'},
+ {id:'pathGrappleRegroup',title:'グラップルで移動した後、味方と合流して戦えた？',importance:3,group:'チームプレイ',weight:5,legend:'パスファインダー'},
+ {id:'pathHighGroundAlly',title:'高所を取った後、味方も戦いやすい射線や足場を作れた？',importance:2,group:'位置取り',weight:3,legend:'パスファインダー'},
+ {id:'alterPassageTeam',title:'オルターのヴォイド通路を味方と共有し、安全な移動や攻めに使えた？',importance:2,group:'展開',weight:3,legend:'オルター'},
+ {id:'alterEscapeRoute',title:'オルターの通路を使い、危険な時に味方と退くルートを作れた？',importance:3,group:'リセット',weight:5,legend:'オルター'},
+ {id:'conduitTacticalAlly',title:'コンジットの戦術アビリティを、戦闘中の味方支援に合わせて使えた？',importance:3,group:'カバー',weight:5,legend:'コンジット'},
+ {id:'conduitUltSpace',title:'コンジットのアルティメットで敵の移動を制限し、味方が戦いやすい空間を作れた？',importance:2,group:'チームプレイ',weight:3,legend:'コンジット'},
+ {id:'wraithPhaseTiming',title:'レイスのフェーズを被弾後の離脱や安全な移動に使えた？',importance:3,group:'リセット',weight:5,legend:'レイス'},
+ {id:'wraithPortalTeam',title:'レイスのポータルを味方の安全な移動や立て直しに活用できた？',importance:2,group:'チームプレイ',weight:3,legend:'レイス'},
+ {id:'octanePadTeam',title:'オクタンのジャンプパッドを味方とタイミングを合わせた攻め・離脱に使えた？',importance:3,group:'展開',weight:5,legend:'オクタン'},
+ {id:'octaneStimCover',title:'オクタンの興奮剤で先行しすぎず、味方のカバーが届く位置を保てた？',importance:3,group:'孤立',weight:5,legend:'オクタン'},
+ {id:'ashPhaseBreachTeam',title:'アッシュのフェーズティアを味方と共有し、安全な攻めや移動に使えた？',importance:2,group:'展開',weight:3,legend:'アッシュ'},
+ {id:'axleNitroGateTeam',title:'アクセルのニトロゲートを味方と使い、攻め・移動・離脱のタイミングを合わせられた？',importance:3,group:'展開',weight:5,legend:'アクセル'},
+ {id:'ballisticTempestTeam',title:'バリスティックのテンペストを味方の攻めに合わせ、チームの火力を支援できた？',importance:2,group:'フォーカス',weight:3,legend:'バリスティック'},
+ {id:'bangaloreSmokeTeam',title:'バンガロールのスモークで敵の射線を切り、味方が動ける状況を作れた？',importance:3,group:'遮蔽',weight:5,legend:'バンガロール'},
+ {id:'bloodhoundScanCall',title:'ブラッドハウンドのスキャン情報を味方に共有し、攻める敵を合わせられた？',importance:3,group:'フォーカス',weight:5,legend:'ブラッドハウンド'},
+ {id:'catalystWallReset',title:'カタリストのフェロバリケードや壁で射線を切り、安全に立て直せた？',importance:2,group:'リセット',weight:3,legend:'カタリスト'},
+ {id:'causticGasControl',title:'コースティックのガストラップで敵の進路を制限し、味方が守りやすい位置を作れた？',importance:2,group:'位置取り',weight:3,legend:'コースティック'},
+ {id:'cryptoEmpTeam',title:'クリプトのEMPを味方の攻めに合わせ、ドローン操作中に部隊から離れすぎなかった？',importance:3,group:'チームプレイ',weight:5,legend:'クリプト'},
+ {id:'fuseGrenadePressure',title:'ヒューズのナックルクラスターやグレネードで敵を遮蔽から動かし、味方の射線につなげた？',importance:2,group:'グレネード',weight:3,legend:'ヒューズ'},
+ {id:'gibraltarDomeReset',title:'ジブラルタルのドームを味方の蘇生や安全なリセットに合わせて使えた？',importance:3,group:'カバー',weight:5,legend:'ジブラルタル'},
+ {id:'horizonLiftTeam',title:'ホライゾンのグラビティリフトで味方と高所や射線を確保できた？',importance:2,group:'高所',weight:3,legend:'ホライゾン'},
+ {id:'lifelineReviveCover',title:'ライフラインの回復・蘇生支援中に味方を守れる位置を保てた？',importance:3,group:'カバー',weight:5,legend:'ライフライン'},
+ {id:'lobaBraceletSafe',title:'ローバのジャンプドライブで移動した後、味方と合流できる安全な位置を選べた？',importance:3,group:'位置取り',weight:5,legend:'ローバ'},
+ {id:'maggieDrillPush',title:'マッドマギーのドリルで敵を遮蔽から動かし、味方と詰める機会を作れた？',importance:2,group:'フォーカス',weight:3,legend:'マッドマギー'},
+ {id:'mirageReviveCover',title:'ミラージュのデコイや透明化を使い、味方の蘇生・移動を安全に支援できた？',importance:2,group:'カバー',weight:3,legend:'ミラージュ'},
+ {id:'newcastleMobileCover',title:'ニューキャッスルのモバイルシールドで味方を守り、カバーし合える位置を作れた？',importance:3,group:'カバー',weight:5,legend:'ニューキャッスル'},
+ {id:'rampartAmpedAngle',title:'ランパートの増幅バリケードを使い、味方と安全な射線を作れた？',importance:2,group:'遮蔽',weight:3,legend:'ランパート'},
+ {id:'revenantPounceTeam',title:'レヴナントのシャドウパウンス後に孤立せず、味方と攻撃先を合わせられた？',importance:3,group:'孤立',weight:5,legend:'レヴナント'},
+ {id:'seerScanCall',title:'シアの索敵情報を味方に共有し、敵の位置に合わせて攻める判断ができた？',importance:2,group:'判断',weight:3,legend:'シア'},
+ {id:'sparrowTrackerCall',title:'スパローのトラッカーダートで敵の位置を把握し、味方と狙う敵を合わせられた？',importance:2,group:'フォーカス',weight:3,legend:'スパロー'},
+ {id:'valkyrieSkywardTeam',title:'ヴァルキリーのスカイハイダイブで味方と安全に移動し、着地後も孤立しなかった？',importance:3,group:'展開',weight:5,legend:'ヴァルキリー'},
+ {id:'vantageSpotterFocus',title:'ヴァンテージの索敵で敵の位置や人数を把握し、味方と攻撃先を共有できた？',importance:2,group:'フォーカス',weight:3,legend:'ヴァンテージ'},
+ {id:'wattsonPylonTeam',title:'ワットソンのフェンスやインターセプターパイロンで味方の安全な位置を守れた？',importance:2,group:'位置取り',weight:3,legend:'ワットソン'},
+ {id:'saveAbilityForTiming',title:'アビリティを急いで使わず、効果が高いタイミングまで待てた？',importance:1,group:'判断',weight:1},
+ {id:'closeHipfire',title:'近距離で腰だめ撃ちを使い、動きながら撃てた？',importance:1,group:'エイム',weight:1},
+ {id:'cellTiming',title:'シールドセルを安全に使えるタイミングを選べた？',importance:1,group:'リセット',weight:1},
+ {id:'ammoCheck',title:'戦闘前に弾薬や回復の残量を確認できた？',importance:1,group:'準備',weight:1}
 ];
+
+QUESTIONS.forEach(q=>{
+  if(!Number.isFinite(q.weight))q.weight=q.importance>=3?5:q.importance===2?2:1;
+  q.questionId=q.id;
+  q.category=q.category||q.group||'分野未設定';
+  q.importanceTier=q.weight>=5?'S':q.weight>=3?'A':q.weight>=2?'B':'C';
+});
 
 const TIPS=[
  'ジグルピークは遮蔽から一瞬出てすぐ隠れるピーク。被弾を抑えながら敵の位置を確認しよう！',
@@ -214,8 +287,42 @@ const PRACTICE={
  death:'死亡した直前の5秒を振り返り、「遮蔽・人数・退路」のどれが欠けたか特定する。',
  postbattle:'戦闘終了後はすぐ漁るのではなく、周囲・安置・漁夫の可能性を確認する。',
  comms:'「敵人数・位置・割れ・移動先」を短く伝える練習。',
- reposition:'同じ遮蔽でもピーク位置を変え、敵の置きエイムをずらす。',
- heal:'回復・リロードする前に敵の射線と味方のカバーを確認する。'
+  reposition:'同じ遮蔽でもピーク位置を変え、敵の置きエイムをずらす。',
+  heal:'回復・リロードする前に敵の射線と味方のカバーを確認する。',
+  coverLow:'味方が削られた時に敵の射線へ撃ち返せる距離と角度を保つ。',
+  coverReceived:'味方の射線が届く遮蔽を基準に立ち位置を選び、先行しすぎない。',
+  stayWithTeam:'味方から離れる前にカバー距離を確認し、合流できる経路を残す。',
+  preventEnemySplit:'敵に射線を切られる前に味方と同じ遮蔽へ寄り、分断を防ぐ。',
+  expandWithSupport:'展開する前に味方の射線と距離を確認し、カバーが届く幅で横へ動く。',
+  octaneStimCover:'興奮剤の移動先を味方がカバーできる場所にし、先着後は味方を待つ。',
+  conduitTacticalAlly:'味方が交戦に入る瞬間や被弾直後に戦術アビリティを合わせる。',
+  wraithPhaseTiming:'被弾してから慌てて使うだけでなく、危険な射線を切って離脱する経路を先に決める。',
+  pathGrappleRegroup:'グラップルで移動した後、味方の位置を確認して射線が重なる場所へ合流する。',
+  alterEscapeRoute:'通路の出口と味方の位置を先に共有し、全員が退けるタイミングで使う。',
+  octanePadTeam:'ジャンプパッドへ乗る前に味方へ合図し、着地後にカバーできる位置を選ぶ。',
+  ashPhaseBreachTeam:'フェーズティアの出口を味方に伝え、出口側を味方がカバーできるタイミングで使う。',
+  axleNitroGateTeam:'ゲートを置く位置を味方と共有し、攻め・移動・退却の目的を合わせてから使う。',
+  ballisticTempestTeam:'テンペストを味方の交戦に合わせ、効果中に同じ敵へ射線を集中する。',
+  bangaloreSmokeTeam:'味方の射線まで消さないよう煙の位置を選び、敵との間を切る目的で使う。',
+  bloodhoundScanCall:'スキャンで見えた敵の数と位置を短く伝え、味方と攻める対象を合わせる。',
+  catalystWallReset:'壁で敵の射線を切る方向を選び、味方と一緒に回復・再配置する。',
+  causticGasControl:'ガストラップで敵の進路を制限しつつ、味方の退路は塞がない位置に置く。',
+  cryptoEmpTeam:'EMP前に味方へ合図し、ドローン操作は必要な情報を得たら早めに切り上げて合流する。',
+  fuseGrenadePressure:'グレネードで敵を遮蔽から動かす方向を考え、味方の射線と合わせる。',
+  gibraltarDomeReset:'ドームを置く前に味方の位置と敵の射線を確認し、蘇生・回復後の移動先も決める。',
+  horizonLiftTeam:'リフトに乗る味方を確認し、降下後に孤立しない着地点を選ぶ。',
+  lifelineReviveCover:'蘇生や回復を始めた後も遮蔽と敵の射線を見て、味方が守られる位置を維持する。',
+  lobaBraceletSafe:'ブレスレットを投げる前に味方の位置を確認し、到着後に合流できる遮蔽を選ぶ。',
+  maggieDrillPush:'ドリルで敵が動く先を味方に伝え、敵が遮蔽を離れた時に集中して撃つ。',
+  mirageReviveCover:'デコイで敵の注意を引く方向を選び、蘇生後に味方と合流できる退路を確保する。',
+  newcastleMobileCover:'シールドを味方の進行方向に合わせ、守る味方と次の遮蔽を意識して動かす。',
+  rampartAmpedAngle:'バリケードを味方の射線と重なる位置に設置し、同じ場所からのリピークを避ける。',
+  revenantPounceTeam:'パウンスで飛び込む前に味方の距離を確認し、着地後は射線が届く敵を狙う。',
+  seerScanCall:'索敵で得た敵の位置や状態をすぐ共有し、情報が有効なうちに味方と判断する。',
+  sparrowTrackerCall:'ダートで得た位置情報を味方に共有し、追跡中に部隊から離れない。',
+  valkyrieSkywardTeam:'移動先の遮蔽と敵の位置を確認してから離陸し、着地後は味方と同じ方向を向く。',
+  vantageSpotterFocus:'敵の人数や距離を味方に伝え、孤立した射撃にならない位置から狙う。',
+  wattsonPylonTeam:'フェンスやパイロンを味方が使える範囲に置き、守る場所と退路を共有する。'
 };
 
 /* =========================
@@ -275,18 +382,69 @@ function navigate(id){
 ========================= */
 const BASE_QUESTION_IDS=['cover','high','focus','preaim','tracking','movement','repeek','expand','isolate','armor','reset','grenade','position','finish','death','coverLow','coverReceived'];
 const REPLACEMENT_ID='comms';
+let requestedReviewMode=null;
 
-function questionForSlot(){
-  const qIds=[...BASE_QUESTION_IDS];
-  const death=appState.currentAnswers.death;
-  if(death==='yes'){
-    qIds[qIds.length-1]=REPLACEMENT_ID;
-  }else{
-    qIds[qIds.length-1]='postbattle';
+function chooseWeightedQuestion(pool){
+  const effectiveWeight=q=>Math.pow(Math.max(0.01,Number(q.weight)||1),2);
+  const total=pool.reduce((sum,q)=>sum+effectiveWeight(q),0);
+  let roll=Math.random()*total;
+  for(const q of pool){roll-=effectiveWeight(q);if(roll<0)return q;}
+  return pool[pool.length-1];
+}
+function pickBalancedWeightedQuestions(candidates,count,minHighWeight){
+  const chosen=[],groupCounts={};
+  const addFrom=pool=>{
+    const unused=pool.filter(q=>!chosen.some(x=>x.id===q.id));
+    const balanced=unused.filter(q=>(groupCounts[q.category||q.group||'未分類']||0)<2);
+    const source=balanced.length?balanced:unused;
+    if(!source.length)return false;
+    const q=chooseWeightedQuestion(source);
+    chosen.push(q);
+    const category=q.category||q.group||'未分類';
+    groupCounts[category]=(groupCounts[category]||0)+1;
+    return true;
+  };
+  const priority=candidates.filter(q=>q.weight>=5);
+  while(chosen.filter(q=>q.weight>=5).length<minHighWeight){
+    if(!addFrom(priority))break;
   }
+  while(chosen.length<count){
+    if(!addFrom(candidates))throw new Error('質問候補が不足しています。');
+  }
+  return chosen;
+}
+function buildBattleQuestionSelection(){
+  const legend=appState.currentBattleMeta?.legend||'';
+  const candidates=QUESTIONS.filter(q=>!q.death&&!q.postbattle&&q.id!=='comms'&&(!q.legend||q.legend===legend));
+  const chosen=pickBalancedWeightedQuestions(candidates,13,8);
+  return [...chosen.map(q=>q.id),'death','__conditional__'];
+}
+function buildSimpleBattleQuestionSelection(){
+  const legend=appState.currentBattleMeta?.legend||'';
+  const candidates=QUESTIONS.filter(q=>!q.death&&!q.postbattle&&q.id!=='comms'&&q.weight>=2&&(!q.legend||q.legend===legend));
+  const chosen=pickBalancedWeightedQuestions(candidates,8,5);
+  return [...chosen.map(q=>q.id),'death','__conditional__'];
+}
+function questionForSlot(){
+  if(!Array.isArray(appState.questionSelection)){
+    let selected=appState.recordingMode==='simple'?buildSimpleBattleQuestionSelection():buildBattleQuestionSelection();
+    if(appState.qIndex>0){
+      const answered=appState.currentAnswers||{};
+      selected=selected.filter(id=>id==='death'?answered.death===undefined:id==='__conditional__'?answered[answered.death==='yes'?'comms':'postbattle']===undefined:answered[id]===undefined);
+      appState.qIndex=0;
+    }
+    appState.questionSelection=selected;
+    saveDraft();
+  }
+  const qIds=appState.questionSelection.map(id=>id==='__conditional__'?(appState.currentAnswers.death==='yes'?REPLACEMENT_ID:'postbattle'):id);
   return qIds.map(id=>QUESTIONS.find(q=>q.id===id)).filter(Boolean);
 }
 
+function startReview(mode){
+  requestedReviewMode=mode==='simple'?'simple':'normal';
+  appState=null;
+  navigate('review');
+}
 function openReview(){
   if(!appState){
     const draft=loadDraft();
@@ -305,9 +463,13 @@ function openReview(){
       currentAnswers:{},
       currentBattleMeta:null,
       battleSetDate:null,
+      recordingMode:requestedReviewMode||'normal',
       startedAt:new Date().toISOString()
     };
   }
+  requestedReviewMode=null;
+  const heading=document.querySelector('#review .card h2');
+  if(heading)heading.textContent=appState.recordingMode==='simple'?'📝 簡易記録（10問）':'⚔️ 今日の3試合を記録';
   if(appState.qIndex===0 && !appState.currentBattleMeta){
     renderBattleSetup();
   }else{
@@ -331,7 +493,7 @@ function renderBattleSetup(){
       `:''}
       <p><b>🦾 使用レジェンドは？</b></p>
       <div class="battle-legend-grid">
-        ${['パスファインダー','オルター','コンジット','レイス','オクタン'].map(l=>`
+        ${LEGENDS.map(l=>`
           <button type="button" class="battle-legend-btn ${currentLegend===l?'picked':''}" data-legend="${l}">${l}</button>
         `).join('')}
       </div>
@@ -433,6 +595,7 @@ function finishMatch(){
     appState.qIndex=0;
     appState.currentAnswers={};
     appState.currentBattleMeta=null;
+    appState.questionSelection=null;
     saveDraft();
     document.getElementById('questionArea').innerHTML=`
       <div class="card good">
@@ -670,8 +833,8 @@ function renderGrowth(){
 
   const overallDelta=(cur.rate!==null&&prev.rate!==null)?cur.rate-prev.rate:null;
   const [overallLabel,overallCls]=trendLabel(overallDelta);
-  const dataNotice=all.length<6
-    ?`<div class="notice">💡 まだ${all.length}試合分です。直近と過去を比較するにはもう少しデータを集めると精度が上がります。</div>`
+  const dataNotice=all.length<10
+    ?`<div class="notice">💡 現在${all.length}戦闘を記録しています。10戦闘程度記録すると、直近と過去の傾向比較がより安定します。</div>`
     :'';
 
   document.getElementById('growthContent').innerHTML=`
@@ -727,15 +890,16 @@ function renderGrowth(){
           return {i,rate:vals.length?yes/vals.length:null};
         }).filter(x=>x.rate!==null);
         if(!points.length)return '<p class="muted">戦闘記録があると成長推移を表示できます。</p>';
-        const W=700,H=300,L=62,R=24,T=28,B=52;
+        const W=Math.max(700,points.length*58),H=300,L=62,R=24,T=28,B=52;
         const x=i=>points.length===1?W/2:L+(W-L-R)*i/(points.length-1);
         const y=v=>T+(H-T-B)*(1-v);
         const poly=points.map((p,i)=>`${x(i).toFixed(1)},${y(p.rate).toFixed(1)}`).join(' ');
-        const yTicks=[0,0.2,0.4,0.6,0.8,1];
+        const yTicks=[0,0.25,0.5,0.75,1];
         const grid=yTicks.map(v=>`<line x1="${L}" y1="${y(v)}" x2="${W-R}" y2="${y(v)}" stroke="currentColor" opacity=".12"/><text x="${L-10}" y="${y(v)+4}" text-anchor="end" font-size="12">${Math.round(v*100)}%</text>`).join('');
-        const xTicks=points.map((p,i)=>`<line x1="${x(i)}" y1="${H-B}" x2="${x(i)}" y2="${H-B+5}" stroke="currentColor" opacity=".35"/><text x="${x(i)}" y="${H-B+21}" text-anchor="middle" font-size="11">戦闘${i+1}</text>`).join('');
+        const tickStep=Math.max(1,Math.ceil(points.length/15));
+        const xTicks=points.map((p,i)=>i%tickStep===0||i===points.length-1?`<line x1="${x(i)}" y1="${H-B}" x2="${x(i)}" y2="${H-B+5}" stroke="currentColor" opacity=".35"/><text x="${x(i)}" y="${H-B+21}" text-anchor="middle" font-size="11">戦闘${i+1}</text>`:'').join('');
         const dots=points.map((p,i)=>`<circle cx="${x(i)}" cy="${y(p.rate)}" r="5" fill="currentColor"><title>${i+1}戦闘目: ${Math.round(p.rate*100)}%</title></circle><text x="${x(i)}" y="${y(p.rate)-10}" text-anchor="middle" font-size="11" font-weight="700">${Math.round(p.rate*100)}%</text>`).join('');
-        return `<div style="overflow-x:auto"><svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" role="img" aria-label="戦闘ごとの○率推移">${grid}<line x1="${L}" y1="${T}" x2="${L}" y2="${H-B}" stroke="currentColor" opacity=".4"/><line x1="${L}" y1="${H-B}" x2="${W-R}" y2="${H-B}" stroke="currentColor" opacity=".4"/>${xTicks}<polyline points="${poly}" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>${dots}<text x="18" y="${H/2}" text-anchor="middle" font-size="12" transform="rotate(-90 18 ${H/2})">○率</text><text x="${W/2}" y="${H-8}" text-anchor="middle" font-size="12">戦闘</text></svg></div>`;
+        return `<div style="overflow-x:auto"><svg viewBox="0 0 ${W} ${H}" width="${W}px" height="${H}" role="img" aria-label="戦闘ごとの○率推移">${grid}<line x1="${L}" y1="${T}" x2="${L}" y2="${H-B}" stroke="currentColor" opacity=".4"/><line x1="${L}" y1="${H-B}" x2="${W-R}" y2="${H-B}" stroke="currentColor" opacity=".4"/>${xTicks}<polyline points="${poly}" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>${dots}<text x="18" y="${H/2}" text-anchor="middle" font-size="12" transform="rotate(-90 18 ${H/2})">○率</text><text x="${W/2}" y="${H-8}" text-anchor="middle" font-size="12">戦闘</text></svg><div class="mini" style="text-align:center"><span style="display:inline-block;width:22px;border-top:3px solid currentColor;vertical-align:middle"></span> ○率の推移　　● 各戦闘の○率</div></div>`;
       })()}
     </div>
 
@@ -755,6 +919,30 @@ function setGrowthMode(mode){
   renderGrowth();
 }
 
+function analysisStatsForMatches(matches){
+  const out={};
+  (matches||[]).forEach(m=>Object.entries(m.answers||{}).forEach(([id,v])=>{
+    if(!['yes','no','na'].includes(v))return;
+    out[id]??={yes:0,no:0,na:0,total:0};
+    out[id][v]++;
+    if(v!=='na')out[id].total++;
+  }));
+  return out;
+}
+function analysisCategoryStats(matches){
+  const qById=new Map(QUESTIONS.map(q=>[q.id,q]));
+  const out={};
+  (matches||[]).forEach(m=>Object.entries(m.answers||{}).forEach(([id,v])=>{
+    if(!['yes','no'].includes(v))return;
+    const q=qById.get(id);if(!q)return;
+    const category=q.category||q.group||'分野未設定';
+    out[category]??={yes:0,no:0,total:0};
+    out[category][v]++;out[category].total++;
+  }));
+  return out;
+}
+function analysisPct(rate){return rate===null||rate===undefined?'—':Math.round(rate*100)+'%';}
+
 function renderWeakness(){
   const scored=weaknessScores().filter(q=>q.stats.total>0);
   const weakest=scored.slice().sort((a,b)=>b.failRate-a.failRate);
@@ -767,21 +955,66 @@ function renderWeakness(){
       <div class="mini">○率 ${Math.round((1-q.failRate)*100)}%　｜　× ${q.stats.no}回　｜　${q.stats.total}回答</div>
     </div>`).join(''):'<p class="muted">まだ十分なデータがありません。</p>';
 
+  const allMatches=growthAllMatches();
+  const latest=allMatches.slice(-1);
+  const latest3=allMatches.slice(-3);
+  const latest10=allMatches.slice(-10);
+  const allStats=analysisStatsForMatches(allMatches);
+  const recent3Stats=analysisStatsForMatches(latest3);
+  const recent10Stats=analysisStatsForMatches(latest10);
+  const latestStats=analysisStatsForMatches(latest);
+  const categoryStats=analysisCategoryStats(allMatches);
+  const categoryRows=Object.entries(categoryStats).map(([name,x])=>({name,...x,rate:x.total?x.yes/x.total:null})).sort((a,b)=>a.rate-b.rate);
+  const catHtml=categoryRows.length?categoryRows.map(x=>`<div class="growth-row"><div class="growth-flex"><b>${escapeHTML(x.name)}</b><b>${analysisPct(x.rate)}</b></div><div class="growth-bar"><span style="width:${Math.round(x.rate*100)}%"></span></div><div class="mini">○${x.yes} ×${x.no} ／ ${x.total}回答</div></div>`).join(''):'<p class="muted">分野別の回答がまだありません。</p>';
+  const categoryWindows=[analysisCategoryStats(latest),analysisCategoryStats(latest3),analysisCategoryStats(latest10),categoryStats];
+  const categoryWindowNames=['今回','直近3戦','直近10戦','全期間'];
+  const allCategoryNames=[...new Set(categoryWindows.flatMap(x=>Object.keys(x)))];
+  const catPeriodHtml=allCategoryNames.length?allCategoryNames.map(name=>`<div class="growth-row"><b>${escapeHTML(name)}</b><div class="mini">${categoryWindowNames.map((windowName,i)=>{const x=categoryWindows[i][name],rate=x&&x.total?x.yes/x.total:null;return `${windowName}：${analysisPct(rate)}${x?`（○${x.yes} ×${x.no}）`:''}`;}).join('　｜　')}</div></div>`).join(''):'<p class="muted">分野別の回答がまだありません。</p>';
+  const latestHtml=latest.length?latest.map(m=>{
+    const answered=Object.entries(m.answers||{}).filter(([,v])=>v==='yes'||v==='no');
+    const bad=answered.filter(([,v])=>v==='no').map(([id])=>QUESTIONS.find(q=>q.id===id)).filter(Boolean);
+    const good=answered.filter(([,v])=>v==='yes').map(([id])=>QUESTIONS.find(q=>q.id===id)).filter(Boolean);
+    return `<div class="growth-row"><b>今回：${escapeHTML(m.legend||'未記録')} ／ ${m.knocks===5?'5+':(m.knocks??'—')}ノック ／ ${m.battleResult==='win'?'勝利':m.battleResult==='loss'?'敗北':'勝敗未記録'}</b><div class="mini">できた：${good.length?good.map(q=>escapeHTML(q.title)).join('、'):'該当なし'}<br>できなかった：${bad.length?bad.map(q=>escapeHTML(q.title)).join('、'):'該当なし'}</div></div>`;
+  }).join(''):'<p class="muted">今回の戦闘記録はまだありません。</p>';
+  const scopeLine=(id,stats)=>{
+    const x=stats[id];return x&&x.total?`${analysisPct(x.yes/x.total)}（○${x.yes} / ×${x.no}）`:'データなし';
+  };
+  const explanationHtml=weakest.slice(0,3).map(q=>{
+    const failed=allMatches.filter(m=>m.answers?.[q.id]==='no');
+    const coFail={};
+    failed.forEach(m=>Object.entries(m.answers||{}).forEach(([id,v])=>{if(id!==q.id&&v==='no')coFail[id]=(coFail[id]||0)+1;}));
+    const linked=Object.entries(coFail).filter(([,n])=>n>=Math.max(2,Math.ceil(failed.length*.35))).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([id,n])=>({q:QUESTIONS.find(x=>x.id===id),n})).filter(x=>x.q);
+    const failedKnocks=failed.map(m=>Number(m.knocks)).filter(Number.isFinite);
+    const failedWins=failed.filter(m=>m.battleResult==='win').length;
+    const category=categoryStats[q.category]||{yes:0,no:0,total:0};
+    const linkedText=linked.map(x=>`「${escapeHTML(x.q.title)}」が${x.n}/${failed.length}戦闘`).join('、');
+    const reason=linked.length?`同じ戦闘では${linkedText}となり、×が重なる傾向です。`:`同じ分野「${escapeHTML(q.category)}」の○率は${category.total?analysisPct(category.yes/category.total):'データ不足'}です。`;
+    const outcome=failed.length?`この質問が×の戦闘は${failed.length}件${failedKnocks.length?`、平均${(failedKnocks.reduce((a,b)=>a+b,0)/failedKnocks.length).toFixed(1)}ノック`:''}${failed.some(m=>m.battleResult==='win'||m.battleResult==='loss')?`、勝率${analysisPct(failedWins/failed.filter(m=>m.battleResult==='win'||m.battleResult==='loss').length)}`:''}。`:'記録が少ないため結果との関係はまだ見られません。';
+    return `<div class="growth-row"><b>${escapeHTML(q.title)}</b><div class="mini">${reason}${outcome}<br><b>確認する点：</b>${escapeHTML(PRACTICE[q.id]||'同じ分野の関連項目も振り返り、共通する場面を探しましょう。')}</div></div>`;
+  }).join('')||'<p class="muted">課題分析に必要な回答がまだありません。</p>';
+
   const legendMap={};
-  records().flatMap(r=>r.matches||[]).forEach(b=>{
+  allMatches.forEach(b=>{
     const lg=b.legend;if(!lg)return;
     const k=Number(b.knocks);
-    legendMap[lg]??={n:0,knocks:0,answers:{}};
+    legendMap[lg]??={n:0,knocks:0,knownKnocks:0,wins:0,knownResults:0,answers:{},categories:{}};
     legendMap[lg].n++;
-    if(Number.isFinite(k))legendMap[lg].knocks+=k;
+    if(Number.isFinite(k)){legendMap[lg].knocks+=k;legendMap[lg].knownKnocks++;}
+    if(b.battleResult==='win'||b.battleResult==='loss'){legendMap[lg].knownResults++;if(b.battleResult==='win')legendMap[lg].wins++;}
     Object.entries(b.answers||{}).forEach(([id,v])=>{
       if(!['yes','no','na'].includes(v))return;
       legendMap[lg].answers[id]??={yes:0,no:0,na:0};
       legendMap[lg].answers[id][v]++;
+      const q=QUESTIONS.find(x=>x.id===id);if(!q||v==='na')return;
+      const category=q.category||q.group||'分野未設定';
+      legendMap[lg].categories[category]??={yes:0,no:0,total:0};
+      legendMap[lg].categories[category][v]++;legendMap[lg].categories[category].total++;
     });
   });
   const legendHtml=Object.entries(legendMap).map(([lg,s])=>{
-    const avg=s.n?s.knocks/s.n:0;
+    const avg=s.knownKnocks?s.knocks/s.knownKnocks:null;
+    const yesAll=Object.values(s.answers).reduce((n,a)=>n+a.yes,0),noAll=Object.values(s.answers).reduce((n,a)=>n+a.no,0),validAnswers=yesAll+noAll;
+    const legendCats=Object.entries(s.categories).map(([name,x])=>({name,...x,rate:x.total?x.yes/x.total:null})).sort((a,b)=>a.rate-b.rate);
     const qs=QUESTIONS.filter(q=>!q.death&&!q.postbattle).map(q=>{
       const a=s.answers[q.id]||{yes:0,no:0,na:0};
       const total=a.yes+a.no;
@@ -791,21 +1024,34 @@ function renderWeakness(){
     const weak=qs.slice().sort((a,b)=>a.rate-b.rate).slice(0,3);
     const groupLabel=q=>escapeHTML(q.group||'分野未設定');
     const trendRows=(arr,icon)=>arr.length?arr.map(x=>`<div class="growth-row"><div class="growth-flex"><b>${icon} ${escapeHTML(x.q.title)}</b><b>${Math.round(x.rate*100)}%</b></div><div class="mini">分野：${groupLabel(x.q)}　｜　○${s.answers[x.q.id].yes} ×${s.answers[x.q.id].no}</div></div>`).join(''):'<p class="muted">まだ十分な傾向データがありません。</p>';
-    const trendSentence=strong.length?`${escapeHTML(strong[0].q.title)}などができている傾向。${weak.length?`一方、${escapeHTML(weak[0].q.title)}などは改善余地あり。`:''}`:'まだ十分な傾向データがありません。';
-    return `<div class="card"><h3>${escapeHTML(lg)}</h3><div class="mini">平均 ${avg.toFixed(1)}ノック/戦闘　｜　${s.n}戦闘</div><p><b>傾向：</b>${trendSentence}</p><h4>⭕ できている傾向</h4>${trendRows(strong,'○')}<h4>⚠️ 課題が出ている傾向</h4>${trendRows(weak,'△')}</div>`;
+    const positive=legendCats.slice().reverse().find(x=>x.total>=2);
+    const negative=legendCats.find(x=>x.total>=2);
+    const trendSentence=positive&&negative?`${escapeHTML(positive.name)}分野は○率${analysisPct(positive.rate)}で、${escapeHTML(positive.name)}の行動ができている傾向です。${positive.name!==negative.name?`${escapeHTML(negative.name)}分野は○率${analysisPct(negative.rate)}で、${escapeHTML(negative.name)}に課題が出やすい傾向があります。`:''}`:strong.length?`${escapeHTML(strong[0].q.title)}ができている傾向があります。${weak.length?`一方、${escapeHTML(weak[0].q.title)}は改善余地があります。`:''}`:'回答数が少ないため、傾向を判断するにはもう少し記録が必要です。';
+    const legendCategoryHtml=legendCats.length?legendCats.map(x=>`<div class="growth-row"><div class="growth-flex"><b>${escapeHTML(x.name)}</b><b>${analysisPct(x.rate)}</b></div><div class="growth-bar"><span style="width:${Math.round(x.rate*100)}%"></span></div><div class="mini">○${x.yes} ×${x.no} ／ ${x.total}回答</div></div>`).join(''):'<p class="muted">分野別データがありません。</p>';
+    const advice=weak[0]?PRACTICE[weak[0].q.id]||`${weak[0].q.category||weak[0].q.group}を意識し、味方とカバーし合える位置で行動しましょう。`:'回答を記録するとレジェンドに合わせた対策を表示します。';
+    return `<div class="card"><h3>${escapeHTML(lg)}</h3><div class="statgrid"><div class="stat">使用戦闘数<br><b>${s.n}</b></div><div class="stat">平均ノック<br><b>${avg===null?'—':avg.toFixed(1)}</b></div><div class="stat">勝率<br><b>${s.knownResults?analysisPct(s.wins/s.knownResults):'—'}</b></div><div class="stat">回答○率<br><b>${validAnswers?analysisPct(yesAll/validAnswers):'—'}</b></div></div><p><b>傾向：</b>${trendSentence}</p><h4>分野別○率</h4>${legendCategoryHtml}<h4>⭕ 得意な行動</h4>${trendRows(strong,'○')}<h4>⚠️ 苦手な行動</h4>${trendRows(weak,'△')}<p><b>対策：</b>${escapeHTML(advice)}</p></div>`;
   }).join('')||'<p class="muted">レジェンド別分析に必要なデータがまだありません。</p>';
 
+  const dataNotice=allMatches.length<10?`<div class="notice">現在${allMatches.length}戦闘を記録しています。10戦闘程度記録すると、分野やレジェンドごとの傾向がより安定します。少ない記録では参考値として見てください。</div>`:'';
   document.getElementById('weaknessContent').innerHTML=`
     <div class="card"><h2>🧠 現状分析・対策</h2>
+      ${dataNotice}
+      <h3>今回の戦闘</h3>${latestHtml}
+      <h3>📅 期間ごとのデータ</h3><div class="statgrid"><div class="stat">今回<br><b>${latest.length}戦闘</b></div><div class="stat">直近3戦<br><b>${latest3.length}戦闘</b></div><div class="stat">直近10戦<br><b>${latest10.length}戦闘</b></div><div class="stat">全期間<br><b>${allMatches.length}戦闘</b></div></div>
+      <p class="mini">質問ごとの比較：今回 ${latest.length?scopeLine('coverReceived',latestStats):'データなし'}　｜　直近3戦 ${scopeLine('coverReceived',recent3Stats)}　｜　直近10戦 ${scopeLine('coverReceived',recent10Stats)}　｜　全期間 ${scopeLine('coverReceived',allStats)}（例：カバーをもらえる位置）</p>
       ${weakest.length?weakest.slice(0,5).map((q,i)=>`
       <div class="card ${i===0?'bad':'warn'}">
         <h3>#${i+1} ${escapeHTML(q.title)}</h3>
-        <p>重要度：${q.importance}/3　｜　× ${q.stats.no}回　｜　失敗率 ${Math.round(q.failRate*100)}%</p>
+        <p>分野：${escapeHTML(q.category)}　｜　重要度：${q.importance}/3　｜　× ${q.stats.no}回　｜　失敗率 ${Math.round(q.failRate*100)}%</p>
+        <p class="mini">今回 ${scopeLine(q.id,latestStats)}　｜　直近3戦 ${scopeLine(q.id,recent3Stats)}　｜　直近10戦 ${scopeLine(q.id,recent10Stats)}　｜　全期間 ${scopeLine(q.id,allStats)}</p>
         <p><b>練習：</b>${escapeHTML(PRACTICE[q.id]||'実戦で意識して振り返ろう。')}</p>
       </div>`).join(''):'<p>まだ記録がありません。まず3戦闘記録すると、現状分析が始まります。</p>'}
     </div>
+    <div class="card"><h3>🔎 傾向の背景</h3><p class="muted">同じ戦闘で重なった回答や結果を手がかりにした関連傾向です。原因を断定するものではありません。</p>${explanationHtml}</div>
     <div class="card"><h3>🏆 上位3つ</h3>${rows(top3)}</div>
     <div class="card"><h3>⚠️ 下位3つ</h3>${rows(bottom3)}</div>
+    <div class="card"><h3>🗂️ 分野別分析</h3>${catHtml}</div>
+    <div class="card"><h3>📊 分野別・期間比較</h3>${catPeriodHtml}</div>
     <div class="card"><h3>🎮 レジェンド別・1戦闘ノック数と傾向</h3>${legendHtml}</div>`;
 }
 
@@ -909,15 +1155,9 @@ function createShareCode(){
   const box=document.getElementById('shareCode');
   const status=document.getElementById('shareStatus');
   try{
-    const payload={
-      app:'Apex Super Coaching System',
-      shareVersion:1,
-      createdAt:new Date().toISOString(),
-      records:records(),
-      goalHistory:goalHistory()
-    };
-    box.value = fullCompactShareEncode(payload);
-    status.textContent=`共有コードを作成しました（${payload.records.length}件の記録）。外部サーバーには送信していません。`;
+    const savedRecords=records();
+    box.value = generateA3ShareCode(savedRecords);
+    status.textContent=`A3共有コードを作成しました（${savedRecords.length}件の記録）。外部サーバーには送信していません。`;
     box.focus();box.select();
   }catch(e){
     status.textContent='共有コードの作成に失敗しました。';
@@ -937,6 +1177,21 @@ async function copyShareCode(){
 }
 function importShareCode(){
   const box=document.getElementById('shareCode');
+  const input=String(box.value).trim();
+  if(input.startsWith('A3-')){
+    const compact=packedShareDecode(input);
+    const decodedRecords=compact&&(Array.isArray(compact.records)?compact.records:(Array.isArray(compact.matches)?[{date:compact.date,battleDate:compact.date,matches:compact.matches}]:null));
+    const status=document.getElementById('shareStatus');
+    if(!decodedRecords){status.textContent='A3共有コードを読み込めませんでした。';return;}
+    const current=records(),seen=new Set(current.map(shareRecordKey));
+    const incoming=decodedRecords.map((r,i)=>({...r,id:r.id||`a3-import-${Date.now()}-${i}`,version:APP_VERSION})).filter(r=>!seen.has(shareRecordKey(r)));
+    if(!incoming.length){status.textContent='追加できる新しい試合記録はありません。重複は追加していません。';return;}
+    if(!confirm(`${incoming.length}件の試合記録を現在のデータに追加します。よろしいですか？`))return;
+    saveRecords([...current,...incoming]);
+    status.textContent=`${incoming.length}件をA3から追加しました。既存データは上書きしていません。`;
+    renderHome();
+    return;
+  }
   if(String(box.value).trim().startsWith("A4-")){
     const full=fullCompactShareDecode(box.value.trim());
     if(full){
@@ -1024,48 +1279,139 @@ document.addEventListener('DOMContentLoaded',()=>{
 
 <script>
 
-/* === Lossless Packed Share Code V3 === */
+/* === Versioned reversible A3 share codec v4: all coaching answers === */
 const PACKED_SHARE_PREFIX="A3";
-const PACKED_LEGENDS=["パスファインダー","オルター","コンジット","レイス","オクタン"];
-const PACKED_ANSWER_ENC={yes:0,no:1,na:2,"":3};
-const PACKED_ANSWER_DEC=["yes","no","na",""];
-function packedSharePayload(record){
-  const bits=[],put=(v,n)=>{for(let i=0;i<n;i++)bits.push((v>>i)&1);};
-  const matches=(record.matches||[]).slice(0,3),d=String(record.battleDate||record.date||"");
-  const dt=new Date(d+"T00:00:00Z"),epoch=new Date("2020-01-01T00:00:00Z");
-  let days=Math.floor((dt-epoch)/86400000);
-  if(!Number.isFinite(days)||days<0)days=0;if(days>131071)days=131071;put(days,17);
-  for(let i=0;i<3;i++){
-    const m=matches[i]||{}, li=PACKED_LEGENDS.indexOf(m.legend);
-    put(li<0?0:li,3);put(Math.min(5,Math.max(0,Number(m.knocks)||0)),3);
-    put(m.battleResult==="win"?1:0,1);
-    const a=m.answers||{},ids=typeof BASE_QUESTION_IDS!=="undefined"?BASE_QUESTION_IDS:[];
-    for(let j=0;j<15;j++)put(PACKED_ANSWER_ENC[a[ids[j]]??""],2);
+const A3_V4_QUESTION_IDS=["cover","high","focus","preaim","tracking","movement","repeek","expand","isolate","armor","reset","grenade","position","finish","death","postbattle","comms","reposition","heal","coverLow","coverReceived","syncFire","multiAngle","engage","lowEnemyPush","stayWithTeam","preventEnemySplit","expandWithSupport","retreatOutnumbered","checkEnemyLine","createOwnAngle","checkBeforeRepeek","grenadeMoveEnemy","makeSpace","tradeDamage","chooseTargetTogether","coverBeforeStart","reloadBehindCover","secureKnockThenReset","stopWhenDisadvantaged","pushWhenKnockAdvantage","fastCoverAfterDamage","crossfireAngle","checkEscapeRoute","enemyRotateAwareness","abilitySupportTeam","avoidThirdParty","protectHealTime","callEnemyFocus","pathExpandSafe","pathGrappleRegroup","pathHighGroundAlly","saveAbilityForTiming","closeHipfire","cellTiming","ammoCheck"];
+const A3_V4_LEGENDS=["パスファインダー","オルター","コンジット","レイス","オクタン"];
+const A3_V5_LEGENDS=["オルター","アッシュ","アクセル","バリスティック","バンガロール","ブラッドハウンド","カタリスト","コースティック","コンジット","クリプト","ヒューズ","ジブラルタル","ホライゾン","ライフライン","ローバ","マッドマギー","ミラージュ","ニューキャッスル","オクタン","パスファインダー","ランパート","レヴナント","シア","スパロー","ヴァルキリー","ヴァンテージ","ワットソン","レイス"];
+const A3_V4_ANSWER_TO_BITS={yes:0,no:1,na:2,"":3};
+const A3_V4_BITS_TO_ANSWER=["yes","no","na",""];
+const A3_V2_FIXED_IDS=["cover","high","focus","preaim","tracking","movement","repeek","expand","isolate","armor","reset","grenade","position","finish","death","coverLow"];
+const A3_V2_BRANCH_IDS=["coverReceived","postbattle","comms"];
+const A3_V3_FIXED_IDS=["cover","high","focus","preaim","tracking","movement","repeek","expand","isolate","armor","reset","grenade","position","finish","death","reposition","heal","coverLow","coverReceived","syncFire","multiAngle","engage"];
+const A3_V3_BRANCH_IDS=["postbattle","comms"];
+function a3BytesToCode(bytes){let bin="";for(const b of bytes)bin+=String.fromCharCode(b);return "A3-"+btoa(bin).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/ ,"");}
+function a3CodeToBytes(code){let s=String(code).trim().replace(/^A3-/ ,"").replace(/-/g,"+").replace(/_/g,"/");while(s.length%4)s+="=";return Uint8Array.from(atob(s),c=>c.charCodeAt(0));}
+function generateA3ShareCode(inputRecords){
+  const rs=Array.isArray(inputRecords)?inputRecords:[];if(rs.length>255)throw new Error("A3 supports at most 255 record sets.");
+  const known=new Set(A3_V4_QUESTION_IDS),extraIds=[];
+  for(const record of rs)for(const match of (record.matches||[]))for(const [id,value] of Object.entries(match.answers||{})){
+    if(!(value in A3_V4_ANSWER_TO_BITS))throw new Error("Unknown answer value cannot be encoded losslessly.");
+    if(!known.has(id)&&!extraIds.includes(id))extraIds.push(id);
   }
-  const bytes=new Uint8Array(Math.ceil(bits.length/8));
-  bits.forEach((b,i)=>bytes[i>>3]|=b<<(i&7));
-  let bin="";for(const b of bytes)bin+=String.fromCharCode(b);
-  return btoa(bin).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+  if(extraIds.length>127)throw new Error("A3 supports at most 127 extension question IDs.");
+  const bytes=[0xA3,0x05];let bit=16;
+  const put=(value,width)=>{if(!Number.isInteger(value)||value<0||value>=2**width)throw new Error("A3 value out of range.");for(let i=0;i<width;i++,bit++)if((value>>i)&1)bytes[bit>>3]=(bytes[bit>>3]||0)|(1<<(bit&7));};
+  put(rs.length,8);put(extraIds.length,7);
+  const encoder=new TextEncoder();
+  for(const id of extraIds){const raw=encoder.encode(id);if(!raw.length||raw.length>63)throw new Error("Question ID length is outside the A3 range.");put(raw.length,6);for(const value of raw)put(value,8);}
+  const ids=[...A3_V4_QUESTION_IDS,...extraIds],epoch=Date.UTC(2020,0,1);
+  for(const record of rs){
+    const date=String(record.battleDate||record.date||""),dt=/^\d{4}-\d{2}-\d{2}$/.test(date)?Date.parse(date+"T00:00:00Z"):NaN,days=Math.round((dt-epoch)/86400000);
+    if(!Number.isFinite(dt)||new Date(dt).toISOString().slice(0,10)!==date||days<0||days>131071)throw new Error("A3 date is outside its exact supported range.");
+    const matches=Array.isArray(record.matches)?record.matches:[];if(matches.length<1||matches.length>63)throw new Error("A3 supports between 1 and 63 battles per set.");
+    put(days,17);put(matches.length,6);
+    for(const match of matches){
+      const legend=A3_V5_LEGENDS.indexOf(match.legend),knocks=Number(match.knocks),answers=match.answers||{};
+      if(legend<0)throw new Error("Unknown legend cannot be encoded losslessly.");
+      if(!Number.isInteger(knocks)||knocks<0||knocks>5)throw new Error("Knock count cannot be encoded losslessly.");
+      if(match.battleResult!=="win"&&match.battleResult!=="loss")throw new Error("Battle result is missing.");
+      put(legend,5);put(knocks,3);put(match.battleResult==="win"?1:0,1);
+      for(const id of ids){const answer=answers[id]??"";if(!(answer in A3_V4_ANSWER_TO_BITS))throw new Error("Unknown answer value cannot be encoded losslessly.");put(A3_V4_ANSWER_TO_BITS[answer],2);}
+    }
+  }
+  while(bytes.length*8<bit)bytes.push(0);
+  return a3BytesToCode(Uint8Array.from(bytes));
 }
+function a3Envelope(records,version){
+  const output=records.map((r,i)=>({...r,id:r.id||("a3-import-"+i+"-"+r.date),version:APP_VERSION}));
+  const first=output[0];return {version,records:output,...(output.length===1?{date:first.date,battleDate:first.battleDate||first.date,matches:first.matches}:{})};
+}
+function decodeA3V4(bytes){
+  let p=16;const get=n=>{if(p+n>bytes.length*8)throw new Error("Truncated A3 code.");let v=0;for(let i=0;i<n;i++,p++)v|=((bytes[p>>3]>>(p&7))&1)<<i;return v;};
+  const count=get(8),extraCount=get(7),decoder=new TextDecoder(),extraIds=[];
+  for(let i=0;i<extraCount;i++){const n=get(6);if(!n)throw new Error("Invalid question ID.");const raw=[];for(let j=0;j<n;j++)raw.push(get(8));extraIds.push(decoder.decode(Uint8Array.from(raw)));}
+  const ids=[...A3_V4_QUESTION_IDS,...extraIds];if(new Set(ids).size!==ids.length)throw new Error("Duplicate A3 question ID.");
+  const epoch=Date.UTC(2020,0,1),records=[];
+  for(let r=0;r<count;r++){
+    const days=get(17);if(days>131071)throw new Error("Invalid date.");
+    const date=new Date(epoch+days*86400000).toISOString().slice(0,10),matchCount=get(6),matches=[];
+    for(let i=0;i<matchCount;i++){
+      const legend=get(3),knocks=get(3),battleResult=get(1)?"win":"loss",answers={};
+      if(legend>=A3_V4_LEGENDS.length||knocks>5)throw new Error("Invalid match metadata.");
+      for(const id of ids){const answer=A3_V4_BITS_TO_ANSWER[get(2)];if(answer!=="")answers[id]=answer;}
+      matches.push({match:i+1,date,battleDate:date,legend:A3_V4_LEGENDS[legend],knocks,battleResult,answers});
+    }
+    records.push({id:"a3-import-"+r+"-"+date,version:APP_VERSION,date,battleDate:date,matches});
+  }
+  if(p>bytes.length*8||Math.ceil(p/8)!==bytes.length)throw new Error("Invalid A3 length.");
+  return a3Envelope(records,"a3-v4");
+}
+function decodeA3V5(bytes){
+  let p=16;const get=n=>{if(p+n>bytes.length*8)throw new Error("Truncated A3 code.");let v=0;for(let i=0;i<n;i++,p++)v|=((bytes[p>>3]>>(p&7))&1)<<i;return v;};
+  const count=get(8),extraCount=get(7),decoder=new TextDecoder(),extraIds=[];
+  for(let i=0;i<extraCount;i++){const n=get(6);if(!n)throw new Error("Invalid question ID.");const raw=[];for(let j=0;j<n;j++)raw.push(get(8));extraIds.push(decoder.decode(Uint8Array.from(raw)));}
+  const ids=[...A3_V4_QUESTION_IDS,...extraIds];if(new Set(ids).size!==ids.length)throw new Error("Duplicate A3 question ID.");
+  const epoch=Date.UTC(2020,0,1),records=[];
+  for(let r=0;r<count;r++){
+    const days=get(17);if(days>131071)throw new Error("Invalid date.");
+    const date=new Date(epoch+days*86400000).toISOString().slice(0,10),matchCount=get(6),matches=[];
+    for(let i=0;i<matchCount;i++){
+      const legend=get(5),knocks=get(3),battleResult=get(1)?"win":"loss",answers={};
+      if(legend>=A3_V5_LEGENDS.length||knocks>5)throw new Error("Invalid match metadata.");
+      for(const id of ids){const answer=A3_V4_BITS_TO_ANSWER[get(2)];if(answer!=="")answers[id]=answer;}
+      matches.push({match:i+1,date,battleDate:date,legend:A3_V5_LEGENDS[legend],knocks,battleResult,answers});
+    }
+    records.push({id:"a3-import-"+r+"-"+date,version:APP_VERSION,date,battleDate:date,matches});
+  }
+  if(p>bytes.length*8||Math.ceil(p/8)!==bytes.length)throw new Error("Invalid A3 length.");
+  return a3Envelope(records,"a3-v5");
+}
+function decodeA3VersionedLegacy(bytes,version){
+  const fixed=version===3?A3_V3_FIXED_IDS:A3_V2_FIXED_IDS,branches=version===3?A3_V3_BRANCH_IDS:A3_V2_BRANCH_IDS;
+  let p=16;const get=n=>{if(p+n>bytes.length*8)throw new Error("Truncated legacy A3.");let v=0;for(let i=0;i<n;i++,p++)v|=((bytes[p>>3]>>(p&7))&1)<<i;return v;};
+  const count=get(8),records=[],epoch=Date.UTC(2020,0,1);
+  for(let r=0;r<count;r++){
+    const days=get(17),date=new Date(epoch+days*86400000).toISOString().slice(0,10),matchCount=get(6),matches=[];
+    for(let i=0;i<matchCount;i++){
+      const legend=get(3),knocks=get(3),battleResult=get(1)?"win":"loss",branchIndex=get(2),answers={};
+      if(legend>=A3_V4_LEGENDS.length||knocks>5||branchIndex>=branches.length)throw new Error("Invalid legacy A3 metadata.");
+      for(const id of fixed){const answer=A3_V4_BITS_TO_ANSWER[get(2)];if(version===1||answer!=="")answers[id]=answer;}
+      const branchAnswer=A3_V4_BITS_TO_ANSWER[get(2)];if(version===1||branchAnswer!=="")answers[branches[branchIndex]]=branchAnswer;
+      matches.push({match:i+1,date,battleDate:date,legend:A3_V4_LEGENDS[legend],knocks,battleResult,answers});
+    }
+    records.push({id:"a3-import-"+r+"-"+date,version:APP_VERSION,date,battleDate:date,matches});
+  }
+  if(p>bytes.length*8)throw new Error("Invalid legacy A3 length.");
+  return a3Envelope(records,"a3-v"+version);
+}
+function decodeLegacyA3(bytes){
+  if(bytes.length!==16)throw new Error("Unrecognized legacy A3 length.");
+  let p=0;const get=n=>{let v=0;for(let i=0;i<n;i++,p++)v|=((bytes[p>>3]>>(p&7))&1)<<i;return v;};
+  const days=get(17),date=new Date(Date.UTC(2020,0,1)+days*86400000).toISOString().slice(0,10),matches=[];
+  const ids=["cover","high","focus","preaim","tracking","movement","repeek","expand","isolate","armor","reset","grenade","position","finish","death"];
+  for(let i=0;i<3;i++){
+    const legend=get(3),knocks=get(3),battleResult=get(1)?"win":"loss",answers={};
+    if(legend>=A3_V4_LEGENDS.length||knocks>5)throw new Error("Invalid legacy A3 match.");
+    for(const id of ids){const answer=A3_V4_BITS_TO_ANSWER[get(2)];if(answer!=="")answers[id]=answer;}
+    matches.push({match:i+1,date,battleDate:date,legend:A3_V4_LEGENDS[legend],knocks,battleResult,answers});
+  }
+  return a3Envelope([{date,battleDate:date,matches}],"legacy-a3");
+}
+function packedSharePayload(record){return generateA3ShareCode([record]).slice(3);}
 function packedShareDecode(code){
   try{
-    const s=String(code).replace(/^A3-/,""),bin=atob(s.replace(/-/g,"+").replace(/_/g,"/"));
-    const bytes=Uint8Array.from(bin,c=>c.charCodeAt(0));let p=0;
-    const get=n=>{let v=0;for(let i=0;i<n;i++)v|=((bytes[p>>3]>>(p&7))&1)<<i,p++;return v;};
-    const days=get(17),dt=new Date(new Date("2020-01-01T00:00:00Z").getTime()+days*86400000);
-    const date=dt.toISOString().slice(0,10),ids=typeof BASE_QUESTION_IDS!=="undefined"?BASE_QUESTION_IDS:[];
-    const matches=[];
-    for(let i=0;i<3;i++){
-      const legend=PACKED_LEGENDS[get(3)]||PACKED_LEGENDS[0],knocks=get(3),battleResult=get(1)?"win":"loss",answers={};
-      for(let j=0;j<15;j++)answers[ids[j]]=PACKED_ANSWER_DEC[get(2)];
-      matches.push({match:i+1,date,battleDate:date,legend,knocks,battleResult,answers});
-    }
-    return {version:"packed-v3",date,battleDate:date,matches};
+    const bytes=a3CodeToBytes(code);
+    if(bytes.length===16)return decodeLegacyA3(bytes);
+    if(bytes[0]===0xA3&&bytes[1]===0x05)return decodeA3V5(bytes);
+    if(bytes[0]===0xA3&&bytes[1]===0x04)return decodeA3V4(bytes);
+    if(bytes[0]===0xA3&&(bytes[1]===1||bytes[1]===2||bytes[1]===3))return decodeA3VersionedLegacy(bytes,bytes[1]);
+    return decodeLegacyA3(bytes);
   }catch(e){return null;}
 }
-window.makeCompactShareCode=record=>PACKED_SHARE_PREFIX+"-"+packedSharePayload(record);
+window.makeCompactShareCode=record=>generateA3ShareCode(Array.isArray(record)?record:[record]);
 window.readCompactShareCode=code=>packedShareDecode(code);
-
+window.generateA3ShareCode=generateA3ShareCode;
 </script>
 
 <script>
