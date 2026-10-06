@@ -894,8 +894,9 @@ function shareEncode(value){
   return 'APEX-SHARE-1.'+btoa(binary).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
 }
 function shareDecode(code){
-  if(!code||!code.startsWith('APEX-SHARE-1.'))throw new Error('共有コードの形式が正しくありません。');
-  let b64=code.slice('APEX-SHARE-1.'.length).replace(/-/g,'+').replace(/_/g,'/');
+  if(!code||(!code.startsWith('APEX-SHARE-V1.')&&!code.startsWith('APEX-SHARE-1.')))throw new Error('共有コードの形式が正しくありません。');
+  const prefix=code.startsWith('APEX-SHARE-V1.')?'APEX-SHARE-V1.':'APEX-SHARE-1.';
+  let b64=code.slice(prefix.length).replace(/-/g,'+').replace(/_/g,'/');
   while(b64.length%4)b64+='=';
   const binary=atob(b64);
   const bytes=new Uint8Array(binary.length);
@@ -937,54 +938,61 @@ async function copyShareCode(){
 }
 function importShareCode(){
   const box=document.getElementById('shareCode');
-  if(String(box.value).trim().startsWith("A4-")){
-    const full=fullCompactShareDecode(box.value.trim());
-    if(full){
-      const status=document.getElementById('shareStatus');
-      const current=records();
-      if(!Array.isArray(full.records)){
-        throw new Error('データ形式が正しくありません。');
-      }
-      const seen=new Set(current.map(shareRecordKey));
-      const incoming=full.records.filter(x=>!seen.has(shareRecordKey(x)));
-      if(!incoming.length){
-        status.textContent='追加できる新しい試合記録はありません。重複は追加していません。';
-        return;
-      }
-      if(!confirm(`${incoming.length}件の試合記録を現在のデータに追加します。よろしいですか？`))return;
-      saveRecords([...current,...incoming]);
-      if(Array.isArray(full.goalHistory)){
-        const old=goalHistory();
-        const goalSeen=new Set(old.map(x=>JSON.stringify(x)));
-        const newGoals=full.goalHistory.filter(x=>!goalSeen.has(JSON.stringify(x)));
-        saveGoalHistory([...old,...newGoals].slice(-100));
-      }
-      status.textContent=`${incoming.length}件を追加しました。既存データは上書きしていません。`;
-      renderHome();
-      return;
-    }
-  }
   const status=document.getElementById('shareStatus');
   try{
-    const data=shareDecode(box.value.trim());
+    const code=String(box.value||'').trim();
+    let data=null;
+
+    if(code.startsWith('APEX-SHARE-V1.')||code.startsWith('APEX-SHARE-1.')){
+      data=shareDecode(code);
+    }else if(code.startsWith('A4-')){
+      data=fullCompactShareDecode(code);
+    }else if(code.startsWith('A3-')){
+      const packed=packedShareDecode(code);
+      if(packed&&Array.isArray(packed.matches)){
+        data={
+          app:'Apex Super Coaching System',
+          shareVersion:1,
+          createdAt:new Date().toISOString(),
+          records:[{
+            id:`import-${Date.now()}-${Math.random().toString(36).slice(2,8)}`,
+            version:APP_VERSION,
+            date:packed.date,
+            battleDate:packed.date,
+            createdAt:new Date().toISOString(),
+            matches:packed.matches
+          }],
+          goalHistory:[]
+        };
+      }
+    }else{
+      data=shareDecode(code);
+    }
+
     if(!data||data.app!=='Apex Super Coaching System'||!Array.isArray(data.records)){
       throw new Error('データ形式が正しくありません。');
     }
+
     const current=records();
     const seen=new Set(current.map(shareRecordKey));
     const incoming=data.records.filter(x=>!seen.has(shareRecordKey(x)));
+
     if(!incoming.length){
       status.textContent='追加できる新しい試合記録はありません。重複は追加していません。';
       return;
     }
+
     if(!confirm(`${incoming.length}件の試合記録を現在のデータに追加します。よろしいですか？`))return;
+
     saveRecords([...current,...incoming]);
+
     if(Array.isArray(data.goalHistory)){
       const old=goalHistory();
       const goalSeen=new Set(old.map(x=>JSON.stringify(x)));
       const newGoals=data.goalHistory.filter(x=>!goalSeen.has(JSON.stringify(x)));
       saveGoalHistory([...old,...newGoals].slice(-100));
     }
+
     status.textContent=`${incoming.length}件を追加しました。既存データは上書きしていません。`;
     renderHome();
   }catch(e){
