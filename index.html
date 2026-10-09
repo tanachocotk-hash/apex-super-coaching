@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>えぺがどんどん強くなる！⚡ すーぱーコーチングシステム</title>
+<title>🐾 ねこーちんぐ | Apex Battle Coaching System</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans JP",sans-serif;color:#171717;background:#f3f5f7}
 *{box-sizing:border-box}body{margin:0;background:#f3f5f7}.wrap{max-width:760px;margin:auto;padding:14px 12px 48px}
@@ -55,21 +55,23 @@ details summary{cursor:pointer;font-weight:800}.answer-row{display:flex;justify-
 
 <section id="home" class="screen active">
   <div class="card hero">
-    <h1>🎮 えぺがどんどん強くなる！</h1>
-    <h2>⚡ すーぱーコーチングシステム</h2>
-    <p>戦って、記録して、弱点を見つけて、強くなる。</p>
+    <h1>🐾 ねこーちんぐ</h1>
+    <h2>Apex Battle Coaching System</h2>
+    <p>戦って、記録して、できたことを見つけながら、次の選択肢を一緒に増やしていこうにゃ🐾</p>
+    <p class="muted">失敗を責めるより、成長を見つけるにゃ。見た目はかわいく、中身はガチの猫コーチだにゃ🐾</p>
   </div>
 
   <div class="card">
     <h2>🎯 今日の目標</h2>
-    <div id="todayGoal" class="goal">目標を選んでいます…</div>
+    <div id="todayGoal" class="goal">今日の目標を選んでるにゃ…</div>
     <div id="goalReason" class="muted"></div>
   </div>
 
   <div class="card">
     <h2>メニュー</h2>
     <div class="grid">
-      <h3 style="grid-column:1/-1;margin:4px 0 0">⚔️ 戦闘を記録</h3>
+      <h3 style="grid-column:1/-1;margin:4px 0 0">🐾 戦闘を記録</h3>
+      <p class="notice" style="grid-column:1/-1;margin:0">このコーチングは正解を暗記するためじゃなく、状況に応じた選択肢を増やして、その場で生存につながる判断を自分で選べるようにするためのものにゃ。味方・敵・遮蔽・安置・部隊数・リソースによって、最善の選択は変わるにゃ。</p>
       <button onclick="startReview('normal')">📝 通常記録（15問）</button>
       <button onclick="startReview('simple')">⚡ 簡易記録（10問）</button>
       <button onclick="navigate('growth')">📊 成長を見る</button>
@@ -77,12 +79,14 @@ details summary{cursor:pointer;font-weight:800}.answer-row{display:flex;justify-
       <button onclick="navigate('practice')">🏋️ 練習する</button>
       <button onclick="navigate('history')">📚 過去の記録</button>
       <button onclick="navigate('strong')">🏆 最強を目指す</button>
+      <button onclick="navigate('advanced')">🐈‍⬛ ねこ上級講座</button>
     </div>
   </div>
 
   <div class="card">
-    <h2>📚 今日のえぺ豆知識</h2>
+    <h2>🐱 ねこメモ</h2>
     <div id="dailyTip" class="tip"></div>
+    <p class="muted">今日のヒントから、次に試せる一歩を見つけていこうにゃ🐾</p>
   </div>
 
   <div class="card">
@@ -95,7 +99,7 @@ details summary{cursor:pointer;font-weight:800}.answer-row{display:flex;justify-
     </div>
     <div class="share-box">
       <h4>🔗 データ共有コード</h4>
-      <p class="muted">サーバーを使わず、この端末だけで共有コードを作成・読み込みできます。</p>
+      <p class="muted">サーバーを使わず、この端末だけで共有コードを作って読み込めるにゃ。</p>
       <div class="grid two">
         <button onclick="createShareCode()">📤 共有コードを作成</button>
         <button class="secondary" onclick="importShareCode()">📥 共有コードを読み込む</button>
@@ -104,14 +108,14 @@ details summary{cursor:pointer;font-weight:800}.answer-row{display:flex;justify-
       <button class="secondary" onclick="copyShareCode()">📋 コードをコピー</button>
       <div id="shareStatus" class="muted"></div>
     </div>
-    <p class="muted">記録・目標選出に使うデータは、このブラウザのLocalStorageに保存されます。</p>
+    <p class="muted">記録や目標選出に使うデータは、このブラウザに保存しているにゃ。</p>
   </div>
 </section>
 
 <section id="review" class="screen">
   <button class="secondary" onclick="navigate('home')">🏠 メニューへ戻る</button>
   <div class="card">
-    <h2>⚔️ 今日の3試合を記録</h2>
+    <h2>🐾 今日の3戦闘を記録</h2>
     <div id="matchInfo"></div>
     <div class="progress"><div id="progressBar"></div></div>
     <div id="progressText" class="muted"></div>
@@ -137,6 +141,11 @@ details summary{cursor:pointer;font-weight:800}.answer-row{display:flex;justify-
 <section id="history" class="screen">
   <button class="secondary" onclick="navigate('home')">🏠 メニューへ戻る</button>
   <div id="historyContent"></div>
+</section>
+
+<section id="advanced" class="screen">
+  <button class="secondary" onclick="navigate('home')">🏠 メニューへ戻る</button>
+  <div id="advancedContent"></div>
 </section>
 
 <section id="strong" class="screen">
@@ -245,7 +254,32 @@ const QUESTIONS=[
  {id:'saveAbilityForTiming',title:'アビリティを急いで使わず、効果が高いタイミングまで待てた？',importance:1,group:'判断',weight:1},
  {id:'closeHipfire',title:'近距離で腰だめ撃ちを使い、動きながら撃てた？',importance:1,group:'エイム',weight:1},
  {id:'cellTiming',title:'シールドセルを安全に使えるタイミングを選べた？',importance:1,group:'リセット',weight:1},
- {id:'ammoCheck',title:'戦闘前に弾薬や回復の残量を確認できた？',importance:1,group:'準備',weight:1}
+ {id:'ammoCheck',title:'戦闘前に弾薬や回復の残量を確認できた？',importance:1,group:'準備',weight:1},
+ {id:'survivalCoverTrade',title:'生存につながる遮蔽と味方カバーを両立できた？',importance:3,group:'遮蔽',weight:5,outcomes:['survived'],level:'basic'},
+ {id:'survivalAngle',title:'敵の射線を受けにくい位置から味方を支援できた？',importance:3,group:'射線',weight:5,outcomes:['survived'],level:'intermediate'},
+ {id:'survivalPushPurpose',title:'有利を作った後、詰める目的と引く選択肢を比べられた？',importance:3,group:'判断',weight:5,outcomes:['survived'],level:'intermediate'},
+ {id:'survivalAftermath',title:'戦闘後の漁夫や安置まで考えて行動できた？',importance:2,group:'生存判断',weight:3,outcomes:['survived'],level:'intermediate'},
+ {id:'deathCoverCause',title:'大きく削られた時、遮蔽に入って被弾を止められた？',importance:3,group:'遮蔽',weight:5,outcomes:['death'],level:'basic'},
+ {id:'deathEscapeRoute',title:'不利になる前に使える退路を確保できていた？',importance:3,group:'生存判断',weight:5,outcomes:['death'],level:'basic'},
+ {id:'deathRetreatTiming',title:'人数不利や回復差がついた時、引く判断ができた？',importance:3,group:'判断',weight:5,outcomes:['death'],level:'intermediate'},
+ {id:'deathCrossfire',title:'複数の敵から同時に射線を受けない位置を選べた？',importance:3,group:'位置取り',weight:5,outcomes:['death'],level:'intermediate'},
+ {id:'deathTeamDistance',title:'味方のカバーが届く距離で戦えていた？',importance:3,group:'カバー',weight:5,outcomes:['death'],level:'basic'},
+ {id:'deathOverpeek',title:'同じ遮蔽や角度から無理にピークし続けなかった？',importance:2,group:'リピーク',weight:3,outcomes:['death'],level:'basic'},
+ {id:'deathCauseReview',title:'死亡直前の位置・人数・退路から主な原因を特定できた？',importance:2,group:'判断',weight:3,outcomes:['death'],level:'intermediate'},
+ {id:'retreatEarlyRead',title:'不利や危険の兆候を早めに見つけられた？',importance:3,group:'判断',weight:5,outcomes:['retreat'],level:'basic'},
+ {id:'retreatAppropriate',title:'その場で戦闘を続ける選択肢と比べ、撤退が適切か考えられた？',importance:3,group:'判断',weight:5,outcomes:['retreat'],level:'intermediate'},
+ {id:'retreatRoute',title:'敵の射線を避ける安全な退路を選べた？',importance:3,group:'生存判断',weight:5,outcomes:['retreat'],level:'basic'},
+ {id:'retreatTogether',title:'味方と離れず、一緒に撤退できた？',importance:3,group:'チームプレイ',weight:5,outcomes:['retreat'],level:'basic'},
+ {id:'retreatRegroup',title:'撤退後に回復・再集合できる位置を確保できた？',importance:2,group:'リセット',weight:3,outcomes:['retreat'],level:'intermediate'},
+ {id:'retreatMissedAdvantage',title:'自分たちが有利な時、必要以上に引いて好機を逃さなかった？',importance:3,group:'判断',weight:5,outcomes:['retreat'],level:'intermediate'},
+ {id:'retreatNextFight',title:'撤退で得られる生存・情報・次の戦闘位置まで考えられた？',importance:2,group:'立ち回り',weight:3,outcomes:['retreat'],level:'intermediate'},
+ {id:'circleAreaControl',title:'終盤に遮蔽・侵入経路・移動余地を含む広いエリアを保てた？',importance:2,group:'エリア管理',weight:2,level:'advanced'},
+ {id:'circleTeamShape',title:'味方の位置関係を保ち、敵の展開に合わせて自分たちも形を変えられた？',importance:2,group:'サークル理論',weight:2,level:'advanced'},
+ {id:'mirrorCare',title:'接敵中、後方から追随する別部隊に挟まれる前に位置を変えられた？',importance:2,group:'終盤判断',weight:2,level:'advanced'},
+ {id:'backToZone',title:'安置外を背にして背後を管理しつつ、安置から入る敵にも備えられた？',importance:2,group:'エリア管理',weight:2,level:'advanced'},
+ {id:'threeSquadDecision',title:'残り3部隊で、傍観と有利な介入の両方を比べて選べた？',importance:2,group:'終盤判断',weight:2,level:'advanced'},
+ {id:'purposefulEndgameFight',title:'終盤の戦闘で、エリア・情報・物資・敵の消耗など得る目的を決められた？',importance:2,group:'終盤判断',weight:2,level:'advanced'}
+
 ];
 
 QUESTIONS.forEach(q=>{
@@ -253,6 +287,7 @@ QUESTIONS.forEach(q=>{
   q.questionId=q.id;
   q.category=q.category||q.group||'分野未設定';
   q.importanceTier=q.weight>=5?'S':q.weight>=3?'A':q.weight>=2?'B':'C';
+  q.level=q.level||(['repeek','expand','reposition','multiAngle','createOwnAngle','enemyRotateAwareness','abilitySupportTeam','avoidThirdParty','engage','lowEnemyPush','expandWithSupport','retreatOutnumbered','checkEnemyLine','checkBeforeRepeek','grenadeMoveEnemy','secureKnockThenReset','stopWhenDisadvantaged','pushWhenKnockAdvantage','crossfireAngle','pathExpandSafe','pathHighGroundAlly','alterEscapeRoute'].includes(q.id)?'intermediate':'basic');
 });
 
 const TIPS=[
@@ -267,6 +302,49 @@ const TIPS=[
  '展開は強いけれど、味方から離れすぎるとカバーを失う。人数差と射線を意識しよう！',
  '高所は強いだけでなく、敵の移動先を限定する材料にもなるよ！'
 ];
+
+
+const ADVANCED_TIPS=[
+ {id:'cutPie',topic:'遮蔽',level:'basic',text:'カッティングパイは、遮蔽を少しずつ切り分けるように敵の射線やピーク角を限定する考え方。身体を出す時間を短くし、複数人の射線に同時に触れない位置を選ぶ。'},
+ {id:'repeek',topic:'リピーク',level:'basic',text:'リピークは同じ高さ・同じ角度を続けない。敵の置きエイムを外せる時だけ、遮蔽の左右や高さを変えて短く確認する。'},
+ {id:'frontline',topic:'チームプレイ',level:'basic',text:'前線を合わせるとは、味方が同時にカバーへ入れる距離とタイミングを保つこと。全員が同じ場所に固まることとは違う。'},
+ {id:'teamDistance',topic:'カバー',level:'basic',text:'味方との適切な距離は、互いの射線と退路を保ちつつ、味方が撃たれた時にすぐ撃ち返せる範囲。'},
+ {id:'reloadCover',topic:'遮蔽',level:'basic',text:'リロードや回復の間は遮蔽に入る。遮蔽がない時は、味方が射線を出してくれる時間と移動先を先に確かめる。'},
+ {id:'avoidOverpeek',topic:'リピーク',level:'basic',text:'同じ角から長く体を出すほど複数の敵に見られやすい。短く撃って隠れ、次に出る前に敵の位置を確認する。'},
+ {id:'aimBurst',topic:'エイム',level:'basic',text:'撃ち続けるより、敵との距離と武器に合わせて反動を抑え、当てられる時間だけピークする。外した時は一度遮蔽へ戻って整える。'},
+ {id:'moveWhileFire',topic:'ファイト',level:'basic',text:'近距離では撃ちながら左右に動き、同じ方向へ走り続けない。動きで避ける時も照準を保てる範囲を意識する。'},
+ {id:'stayTradeRange',topic:'孤立',level:'basic',text:'味方から離れすぎると、ダメージ交換や蘇生の助けが間に合わない。展開する前に味方との距離を確認する。'},
+ {id:'healWindow',topic:'リセット',level:'basic',text:'回復は敵の射線を切り、味方が時間を作ってくれる時に行う。回復を完了することより、次の被弾を防ぐことを優先する。'},
+ {id:'ammoReady',topic:'準備',level:'basic',text:'撃ち合いに入る前に弾薬・回復・アビリティを確認する。残量が少ないなら、戦闘を始める位置や継続時間を考える。'},
+ {id:'aimRange',topic:'エイム',level:'basic',text:'遠い敵へ弾を使い切るより、武器の得意距離で当てられる場面を選ぶ。射撃練習では敵との距離ごとに反動を確かめる。'},
+ {id:'grenadeCover',topic:'グレネード',level:'basic',text:'グレネードはダメージだけでなく、敵を遮蔽から動かすためにも使える。味方が撃てる角度や安全な移動先を作れるか考える。'},
+ {id:'focusCall',topic:'フォーカス',level:'basic',text:'味方と狙う敵を合わせる時は、敵の位置やアーマーを短く伝える。孤立した敵が見えても、味方が撃てるかを確認してから撃ち始める。'},
+ {id:'angleReset',topic:'位置取り',level:'basic',text:'撃ち合いで不利になったら、同じ角度に留まらず遮蔽へ戻る。次の位置から再び撃つか、味方と合流する選択肢を残そう。'},
+ {id:'safeAngle',topic:'射線',level:'intermediate',text:'射線を増やす時は、味方と別角度を作りながら、敵の反撃を一人で受けない戻り先も残す。'},
+ {id:'isolation',topic:'孤立',level:'basic',text:'展開は敵の注意を分散できる一方、味方のカバーが届かない距離まで進むと孤立になる。進む前に味方の位置と退路を確認する。'},
+ {id:'isolateEnemy',topic:'フォーカス',level:'intermediate',text:'敵が味方から離れた時は、先に射線と人数有利を作ってから詰める。孤立を見つけても、味方が追いつけないなら一拍待つ選択肢がある。'},
+ {id:'knockPush',topic:'判断',level:'intermediate',text:'ノック後の詰めは自動的な正解ではない。蘇生時間、残り敵の射線、味方の体力、漁夫の接近を比べ、継続・回復・位置維持を選ぶ。'},
+ {id:'retreatFire',topic:'生存判断',level:'intermediate',text:'撃ち返しながらの後退は、味方の退路を作りながら敵の追撃を遅らせる方法。遮蔽から遮蔽へ移動し、同じ射線を受け続けない。'},
+ {id:'circleTheory',topic:'サークル理論',level:'advanced',text:'サークル理論では味方3人と敵3人をそれぞれ円周上の点のように捉える。敵側の展開を味方側の配置で囲い、孤立した敵が生まれたら安全を確かめて包囲を縮める。単純に突っ込む合図ではない。'},
+ {id:'areaControl',topic:'エリア管理',level:'advanced',text:'終盤は遮蔽・高低差・射線・敵の侵入経路を見て、最終安置で広く強いエリアを保つ。次の移動余地を残し、今いる場所を守る価値も比べる。'},
+ {id:'threeSquads',topic:'終盤判断',level:'advanced',text:'残り3部隊でも必ず傍観するわけではない。どちらが勝ちそうか、勝者が自分たちに与える脅威、介入で両方を消耗させる価値を見て選ぶ。'},
+ {id:'purposeFight',topic:'終盤判断',level:'advanced',text:'終盤の戦闘を避けること自体が目的ではない。エリア・情報・リソース・敵の消耗など明確な利益と、漁夫や複数射線の危険を比べる。'},
+ {id:'mirrorCare',topic:'終盤判断',level:'advanced',text:'接敵中は後方から同じ敵を追うミラーリング部隊にも注意する。挟まれる形になる前に戦闘を切り上げるか、射線を切れる位置へ移る。'},
+ {id:'backToZone',topic:'エリア管理',level:'advanced',text:'安置外を背にすると背後を管理しやすい場合がある。ただし安置外から入ってくる敵や安置移動のタイミングも確認し、背面が常に安全だとは決めつけない。'}
+];
+function tipForQuestion(q){
+  appState.questionTipsById=appState.questionTipsById||{};
+  if(appState.questionTipsById[q.id])return ADVANCED_TIPS.find(t=>t.id===appState.questionTipsById[q.id]);
+  const mastery=foundationMastery(),rank={basic:0,intermediate:1,advanced:2},allowed=ADVANCED_TIPS.filter(t=>(t.level!=='advanced'||mastery.ready)&&(rank[t.level]||0)<=(rank[q.level]||0));
+  const used=new Set(Object.values(appState.questionTipsById));
+  const topic=(q.group||q.category||'').toLowerCase();
+  let pool=allowed.filter(t=>!used.has(t.id)&&topic.includes(t.topic.toLowerCase()));
+  if(!pool.length)pool=allowed.filter(t=>!used.has(t.id)&&t.level!=='advanced');
+  if(!pool.length)pool=allowed.filter(t=>!used.has(t.id));
+  const tip=pool.length?pool[Math.floor(Math.random()*pool.length)]:null;
+  if(tip){appState.questionTipsById[q.id]=tip.id;saveDraft();}
+  return tip;
+}
 
 const PRACTICE={
  cover:'遮蔽を使って「出る→撃つ→隠れる」を反復。遮蔽から身体を出す時間を短くする。',
@@ -357,6 +435,19 @@ function escapeHTML(v){
   return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
+function catCoachLine(value){
+  const text=String(value??'').trim();
+  if(!text||/(?:にゃ|にゃん|かにゃ)(?:🐾)?[。！!？?]*$/.test(text))return text;
+  return text.replace(/[。！!？?]+$/,'')+'にゃ🐾';
+}
+function catQuestionTitle(value){return String(value).replace(/[?？]\s*$/,'かにゃ？')}
+function catifyInstructionMarkup(markup){
+  return String(markup).replace(/<p([^>]*)>([\s\S]*?)<\/p>/g,(_,attrs,body)=>'<p'+attrs+'>'+catCoachLine(body)+'</p>').replace(/<li>([\s\S]*?)<\/li>/g,(_,body)=>'<li>'+catCoachLine(body)+'</li>');
+}
+function catifyUserMessages(host){
+  if(!host)return;
+  host.innerHTML=host.innerHTML.replace(/<p(?![^>]*class=["\']mini)([^>]*)>([\s\S]*?)<\/p>/g,(_,attrs,body)=>"<p"+attrs+">"+catCoachLine(body)+"</p>").replace(/<li>([\s\S]*?)<\/li>/g,(_,body)=>"<li>"+catCoachLine(body)+"</li>");
+}
 /* =========================
    NAVIGATION
 ========================= */
@@ -373,6 +464,9 @@ function navigate(id){
   if(id==='practice')renderPractice();
   if(id==='history')renderHistory();
   if(id==='strong')renderStrong();
+  if(id==='history')catifyUserMessages(document.getElementById('historyContent'));
+  if(id==='strong')catifyUserMessages(document.getElementById('strongContent'));
+  if(id==='advanced')renderAdvanced();
 }
 
 /* =========================
@@ -382,7 +476,18 @@ function navigate(id){
 ========================= */
 const BASE_QUESTION_IDS=['cover','high','focus','preaim','tracking','movement','repeek','expand','isolate','armor','reset','grenade','position','finish','death','coverLow','coverReceived'];
 const REPLACEMENT_ID='comms';
+const BASIC_FOUNDATION_IDS=['cover','tracking','stayWithTeam','coverLow','coverReceived','heal','reloadBehindCover','fastCoverAfterDamage','finish','multiAngle'];
 let requestedReviewMode=null;
+function foundationMastery(){
+  const stats=answerStats();let total=0,yes=0;
+  for(const id of BASIC_FOUNDATION_IDS){const x=stats[id]||{yes:0,no:0};total+=x.yes+x.no;yes+=x.yes;}
+  return {total,rate:total?yes/total:0,ready:total>=12&&yes/total>=0.72};
+}
+function knowledgeLevelLabel(level){return level==='advanced'?'上級':level==='intermediate'?'中級':'基礎';}
+function eligibleQuestionPool(outcome){
+  const mastered=foundationMastery().ready;
+  return QUESTIONS.filter(q=>!q.death&&!q.postbattle&&q.id!=='comms'&&(!q.legend||q.legend===appState.currentBattleMeta?.legend)&&(!q.outcomes||q.outcomes.includes(outcome))&&(mastered||q.level!=='advanced'));
+}
 
 function chooseWeightedQuestion(pool){
   const effectiveWeight=q=>Math.pow(Math.max(0.01,Number(q.weight)||1),2);
@@ -413,31 +518,40 @@ function pickBalancedWeightedQuestions(candidates,count,minHighWeight){
   }
   return chosen;
 }
+/* Outcome-first, weighted, outcome-aware selection with stable saved order. */
+function pickBalancedWeightedQuestions(candidates,count,minHighWeight,initialChosen=[]){
+  const chosen=initialChosen.slice(),groupCounts={};
+  chosen.forEach(q=>{const category=q.category||q.group||'未分類';groupCounts[category]=(groupCounts[category]||0)+1;});
+  const addFrom=pool=>{
+    const unused=pool.filter(q=>!chosen.some(x=>x.id===q.id));
+    const balanced=unused.filter(q=>(groupCounts[q.category||q.group||'未分類']||0)<2);
+    const source=balanced.length?balanced:unused;
+    if(!source.length)return false;
+    const q=chooseWeightedQuestion(source);chosen.push(q);
+    const category=q.category||q.group||'未分類';groupCounts[category]=(groupCounts[category]||0)+1;
+    return true;
+  };
+  while(chosen.filter(q=>q.weight>=5).length<minHighWeight){if(!addFrom(candidates.filter(q=>q.weight>=5)))break;}
+  while(chosen.length<count){if(!addFrom(candidates))throw new Error('質問候補が不足しています。');}
+  return chosen;
+}
 function buildBattleQuestionSelection(){
-  const legend=appState.currentBattleMeta?.legend||'';
-  const candidates=QUESTIONS.filter(q=>!q.death&&!q.postbattle&&q.id!=='comms'&&(!q.legend||q.legend===legend));
-  const chosen=pickBalancedWeightedQuestions(candidates,13,8);
-  return [...chosen.map(q=>q.id),'death','__conditional__'];
+  const outcome=appState.currentBattleMeta?.engagementOutcome||'survived';
+  const count=appState.recordingMode==='simple'?10:15;
+  const pool=eligibleQuestionPool(outcome).filter(q=>appState.recordingMode!=='simple'||q.weight>=2||q.outcomes?.includes(outcome));
+  const specific=pool.filter(q=>q.outcomes?.includes(outcome));
+  const required=Math.min(4,specific.length,count);
+  const first=pickBalancedWeightedQuestions(specific,required,Math.min(2,required));
+  return pickBalancedWeightedQuestions(pool,count,appState.recordingMode==='simple'?5:8,first).map(q=>q.id);
 }
-function buildSimpleBattleQuestionSelection(){
-  const legend=appState.currentBattleMeta?.legend||'';
-  const candidates=QUESTIONS.filter(q=>!q.death&&!q.postbattle&&q.id!=='comms'&&q.weight>=2&&(!q.legend||q.legend===legend));
-  const chosen=pickBalancedWeightedQuestions(candidates,8,5);
-  return [...chosen.map(q=>q.id),'death','__conditional__'];
-}
+function buildSimpleBattleQuestionSelection(){return buildBattleQuestionSelection();}
 function questionForSlot(){
   if(!Array.isArray(appState.questionSelection)){
-    let selected=appState.recordingMode==='simple'?buildSimpleBattleQuestionSelection():buildBattleQuestionSelection();
-    if(appState.qIndex>0){
-      const answered=appState.currentAnswers||{};
-      selected=selected.filter(id=>id==='death'?answered.death===undefined:id==='__conditional__'?answered[answered.death==='yes'?'comms':'postbattle']===undefined:answered[id]===undefined);
-      appState.qIndex=0;
-    }
-    appState.questionSelection=selected;
+    appState.questionSelection=buildBattleQuestionSelection();
+    appState.questionTipsById=appState.questionTipsById||{};
     saveDraft();
   }
-  const qIds=appState.questionSelection.map(id=>id==='__conditional__'?(appState.currentAnswers.death==='yes'?REPLACEMENT_ID:'postbattle'):id);
-  return qIds.map(id=>QUESTIONS.find(q=>q.id===id)).filter(Boolean);
+  return appState.questionSelection.map(id=>QUESTIONS.find(q=>q.id===id)).filter(Boolean);
 }
 
 function startReview(mode){
@@ -449,7 +563,7 @@ function openReview(){
   if(!appState){
     const draft=loadDraft();
     if(draft){
-      const resume=confirm('途中保存された戦闘があります。続きから再開しますか？');
+      const resume=confirm('途中までの戦闘記録があるにゃ。続きから再開するかにゃ？🐾');
       if(resume)appState=draft; else clearDraft();
     }
   }
@@ -469,12 +583,10 @@ function openReview(){
   }
   requestedReviewMode=null;
   const heading=document.querySelector('#review .card h2');
-  if(heading)heading.textContent=appState.recordingMode==='simple'?'📝 簡易記録（10問）':'⚔️ 今日の3試合を記録';
-  if(appState.qIndex===0 && !appState.currentBattleMeta){
-    renderBattleSetup();
-  }else{
-    renderQuestion();
-  }
+  if(heading)heading.textContent=appState.recordingMode==='simple'?'📝 簡易記録（10問）':'⚔️ 今日の3戦闘を記録';
+  if(!appState.currentBattleMeta){renderBattleSetup();}
+  else if(!appState.currentBattleMeta.engagementOutcome){renderBattleOutcome();}
+  else{renderQuestion();}
 }
 
 function renderBattleSetup(){
@@ -489,7 +601,7 @@ function renderBattleSetup(){
         <label><b>📅 この3戦闘は何日のもの？</b>
           <input id="battleSetDate" type="date" value="${escapeHTML(currentDate)}" style="display:block;margin-top:8px;padding:10px;border:1px solid #d8dde3;border-radius:10px;width:100%;">
         </label>
-        <p class="muted">実際にプレイした日を入力してください。翌日に振り返る場合も、そのプレイ日のまま記録できます。</p>
+        <p class="muted">実際にプレイした日を入力してほしいにゃ。翌日に振り返る場合も、プレイした日付のまま記録できるにゃ。</p>
       `:''}
       <p><b>🦾 使用レジェンドは？</b></p>
       <div class="battle-legend-grid">
@@ -497,7 +609,7 @@ function renderBattleSetup(){
           <button type="button" class="battle-legend-btn ${currentLegend===l?'picked':''}" data-legend="${l}">${l}</button>
         `).join('')}
       </div>
-      <button id="startBattleBtn" style="margin-top:12px" ${currentLegend?'':'disabled'}>この戦闘のレビューを開始 →</button>
+      <button id="startBattleBtn" style="margin-top:12px" ${currentLegend?'':'disabled'}>この戦闘の振り返りを始めるにゃ →</button>
       <div id="battleSetupMsg" class="muted"></div>
     </div>`;
   const buttons=host.querySelectorAll('.battle-legend-btn');
@@ -512,20 +624,69 @@ function renderBattleSetup(){
     if(isFirstOfSet){
       const date=dateInput?.value||'';
       if(!date){
-        host.querySelector('#battleSetupMsg').textContent='プレイした日付を入力してください。';
+        host.querySelector('#battleSetupMsg').textContent='プレイした日付を入力してほしいにゃ🐾';
         return;
       }
       if(!/^\d{4}-\d{2}-\d{2}$/.test(date)){
-        host.querySelector('#battleSetupMsg').textContent='日付を正しく入力してください。';
+        host.querySelector('#battleSetupMsg').textContent='日付が正しいか、もう一度確認してみてにゃ🐾';
         return;
       }
       appState.battleSetDate=date;
       appState.date=date;
     }
-    appState.currentBattleMeta={legend,knocks:null,result:''};
+    appState.currentBattleMeta={legend,knocks:null,result:'',engagementOutcome:''};
+    appState.questionSelection=null;
+    appState.questionTipsById={};
     saveDraft();
-    renderQuestion();
+    renderBattleOutcome();
   };
+}
+
+
+function renderBattleOutcome(){
+  const host=document.getElementById('questionArea');
+  const selected=appState.currentBattleMeta?.engagementOutcome||'';
+  host.innerHTML=`
+    <div class="card">
+      <h2>戦闘結果の分類</h2>
+      <p>ノック数や勝敗とは別に、この戦闘の最後の状態を選んでほしいにゃ。ノック（ダウン）後に蘇生されて生き残った場合は「生存」だにゃ。</p>
+      <div class="battle-result-grid" style="grid-template-columns:repeat(auto-fit,minmax(100px,1fr))">
+        <button type="button" class="engagement-outcome-btn ${selected==='survived'?'picked':''}" data-outcome="survived">🟢 生存</button>
+        <button type="button" class="engagement-outcome-btn ${selected==='death'?'picked':''}" data-outcome="death">☠️ 死亡</button>
+        <button type="button" class="engagement-outcome-btn ${selected==='retreat'?'picked':''}" data-outcome="retreat">↩️ 戦略的撤退</button>
+      </div>
+      <p class="notice">※『戦略的撤退』は、戦闘の継続を不利・危険と判断して、自分たちの生存や次の戦闘のために、意図的にその場を離れることを指すにゃ。</p>
+      <p class="muted">戦略的撤退は勝敗や失敗を意味しないにゃ。撤退判断が状況に合っていたか、質問で一緒に振り返ろうにゃ🐾</p>
+      <p class="muted">逃げた＝失敗ではないにゃ。状況を見て選べたか、一緒に振り返ろう🐾</p>
+      <button type="button" id="confirmBattleOutcome" ${selected?'':'disabled'}>この結果で質問へ進む →</button>
+    </div>`;
+  host.querySelectorAll('.engagement-outcome-btn').forEach(b=>b.onclick=()=>{
+    appState.currentBattleMeta.engagementOutcome=b.dataset.outcome;
+    host.querySelectorAll('.engagement-outcome-btn').forEach(x=>x.classList.toggle('picked',x===b));
+    host.querySelector('#confirmBattleOutcome').disabled=false;saveDraft();
+  });
+  host.querySelector('#confirmBattleOutcome').onclick=()=>{
+    const oldSelection=Array.isArray(appState.questionSelection)?appState.questionSelection:null;
+    const oldAnswered=oldSelection?oldSelection.slice(0,appState.qIndex).filter(id=>id!=='death'&&id!=='__conditional__'&&appState.currentAnswers?.[id]!==undefined&&QUESTIONS.some(q=>q.id===id&&!q.outcomes)):[];
+    const picked=buildBattleQuestionSelection();
+    appState.questionSelection=[...oldAnswered,...picked.filter(id=>!oldAnswered.includes(id))].slice(0,appState.recordingMode==='simple'?10:15);
+    appState.qIndex=oldAnswered.length;appState.questionTipsById=appState.questionTipsById||{};saveDraft();renderQuestion();
+  };
+}
+
+function coachFeedback(q,value){
+  if(!q)return '';
+  if(value==='na')return 'この状況に当てはまるかを分けて記録できたの、いい振り返りにゃ🐾';
+  if(q.death)return '正直に記録できたのが次につながるにゃ。原因を見つけて、次の選択肢を増やそう🐾';
+  if(value==='yes'){
+    const title=q.title||'';
+    if(/遮蔽|カバー/.test(title))return 'にゃいす！！ 遮蔽やカバーを意識できたのは、生存につながる大事な判断にゃ🐾';
+    if(/味方|フォーカス|孤立|合流/.test(title))return 'にゃいす判断にゃ！！ 味方との連携を意識できたの、とってもいいにゃ🐾';
+    if(/撤退|引く|退く|リセット/.test(title))return 'にゃいす判断にゃ！！ 状況を見て引く選択肢を取れたのは大切な力にゃ🐾';
+    if(/高所|位置|展開|射線|エリア/.test(title))return 'それめっちゃ良いにゃ！！ 位置や射線を考えて動けたのが強みになってるにゃ🐾';
+    return 'にゃいす！！ できたことを見つけて記録できたにゃ。次の戦闘にも活かそう🐾';
+  }
+  return 'できなかったことも記録できたのが前進にゃ。次は遮蔽・味方との距離・引く判断も選択肢に入れてみよう🐾';
 }
 
 function renderQuestion(){
@@ -533,8 +694,12 @@ function renderQuestion(){
   if(appState.qIndex>=qs.length){finishMatch();return}
   const q=qs[appState.qIndex];
   const selected=appState.currentAnswers[q.id]||'';
+  const previousQuestion=appState.qIndex>0?qs[appState.qIndex-1]:null;
+  const previousFeedback=previousQuestion&&appState.currentAnswers[previousQuestion.id]
+    ?coachFeedback(previousQuestion,appState.currentAnswers[previousQuestion.id]):'';
+  const tip=tipForQuestion(q);
   const legend=appState.currentBattleMeta?.legend||'';
-  document.getElementById('matchInfo').innerHTML=`<b>第${appState.match}戦闘 / 3</b>　🦾 ${escapeHTML(legend)}`;
+  document.getElementById('matchInfo').innerHTML=`<b>第${appState.match}戦闘 / 3</b>　🦾 ${escapeHTML(legend)}　<span class="mini">${appState.currentBattleMeta.engagementOutcome==='retreat'?'↩️ 戦略的撤退':appState.currentBattleMeta.engagementOutcome==='death'?'☠️ 死亡':'🟢 生存'}</span>`;
   document.getElementById('progressText').textContent=`${appState.qIndex+1} / ${qs.length}問`;
   document.getElementById('progressBar').style.width=`${((appState.qIndex+1)/qs.length)*100}%`;
   document.getElementById('questionArea').innerHTML=`
@@ -543,15 +708,23 @@ function renderQuestion(){
       <span>🦾 ${escapeHTML(legend)}</span>
     </div>
     <div class="card">
-      <div class="importance">重要度：${q.importance}/3　<span class="tag">${escapeHTML(q.group)}</span></div>
-      <div class="qtitle">${escapeHTML(q.title)}</div>
-      ${q.death?'<p class="muted">死亡した場合、通常の「戦闘終了後」質問は出さず、別の記録項目に切り替えます。</p>':''}
+      ${previousFeedback?`<div class="notice" style="margin-bottom:12px">🐱 ${escapeHTML(previousFeedback)}</div>`:''}
+      <p class="muted">ここ、どうだったかにゃ？できたことも一緒に見つけよう🐾</p>
+      <div class="importance">${knowledgeLevelLabel(q.level)}　重要度：${q.importance}/3　<span class="tag">${escapeHTML(q.group)}</span></div>
+      <div class="qtitle">${escapeHTML(catQuestionTitle(q.title))}</div>
+      ${tip?`<div class="notice" style="margin-top:14px"><b>🐾 ねこメモ（${knowledgeLevelLabel(tip.level)}）</b><br>${escapeHTML(catCoachLine(tip.text))}</div>`:''}
       <div class="answers">
         <button class="${selected==='yes'?'picked':''}" onclick="answerQuestion('yes')">○<br><small>${q.death?'死亡':'できた'}</small></button>
         <button class="${selected==='no'?'picked':''}" onclick="answerQuestion('no')">×<br><small>${q.death?'生存':'できなかった'}</small></button>
         <button class="${selected==='na'?'picked':''}" onclick="answerQuestion('na')">―<br><small>該当なし</small></button>
       </div>
+      ${appState.qIndex>0?'<button type="button" class="secondary" style="margin-top:12px" onclick="goToPreviousQuestion()">← 1つ前の質問に戻る</button>':''}
     </div>`;
+}
+
+function goToPreviousQuestion(){
+  if(!appState||appState.qIndex<=0)return;
+  appState.qIndex--;saveDraft();renderQuestion();
 }
 
 function answerQuestion(value){
@@ -570,6 +743,7 @@ function finishMatch(){
     renderBattleSetup();
     return;
   }
+  if(!appState.currentBattleMeta.engagementOutcome){renderBattleOutcome();return;}
 
   /* After the coaching questions, collect the actual battle result.
      Knock count/result are outcome fields, not coaching questions. */
@@ -585,6 +759,7 @@ function finishMatch(){
     legend:appState.currentBattleMeta.legend,
     knocks:appState.currentBattleMeta.knocks,
     battleResult:appState.currentBattleMeta.result,
+    engagementOutcome:appState.currentBattleMeta.engagementOutcome,
     answers:{...appState.currentAnswers},
     completedAt:new Date().toISOString()
   };
@@ -600,7 +775,7 @@ function finishMatch(){
     document.getElementById('questionArea').innerHTML=`
       <div class="card good">
         <h2>✅ 第${matchRecord.match}戦闘 完了！</h2>
-        <p>記録を保存しました。次の戦闘へ進めます。</p>
+        <p>記録を保存できたにゃ。ひとつずつ振り返れたの、にゃいす！！🐾 次の戦闘へ進もうにゃ。</p>
         <button onclick="renderBattleSetup()">次の戦闘へ →</button>
       </div>`;
   }else{
@@ -619,7 +794,7 @@ function finishMatch(){
     document.getElementById('questionArea').innerHTML=`
       <div class="card good">
         <h2>🏆 3戦闘 完了！</h2>
-        <p>3戦闘分の記録を保存しました。</p>
+        <p>3戦闘分の記録を保存しました。最後まで振り返れたにゃ！記録を重ねることが次の成長につながるにゃいす🐾</p>
         <button onclick="navigate('home')">ホームへ戻る</button>
       </div>`;
   }
@@ -635,10 +810,11 @@ function renderBattleResult(){
       <div class="battle-knock-grid">
         ${[0,1,2,3,4,5].map(n=>`<button type="button" class="battle-knock-btn" data-knock="${n}">${n===5?'5+':n}</button>`).join('')}
       </div>
-      <p><b>この戦闘は？</b></p>
+      <p><b>この戦闘の勝敗は？</b></p>
       <div class="battle-result-grid">
         <button type="button" class="battle-result-btn" data-result="win">🏆 勝った</button>
         <button type="button" class="battle-result-btn" data-result="loss">💀 負けた</button>
+        <button type="button" class="battle-result-btn" data-result="none">— 勝敗なし</button>
       </div>
       <button type="button" id="saveBattleResult" disabled style="margin-top:12px">この戦闘を保存</button>
     </div>`;
@@ -705,7 +881,7 @@ function selectTodayGoal(){
   let candidates=pool.map(q=>({q,weight:1}));
   if(rs.length===0){
     const q=pool[Math.floor(Math.random()*pool.length)];
-    return {q,reason:'まだ記録がないので、まずはランダムに今日の目標を選びました。'};
+    return {q,reason:'まだ記録がないにゃ。まずは今日の目標を一緒に選んでみるにゃ🐾'};
   }
   const st=answerStats();
   candidates=candidates.map(({q})=>{
@@ -723,7 +899,7 @@ function selectTodayGoal(){
   let chosen=candidates[candidates.length-1].q;
   for(const c of candidates){r-=c.weight;if(r<=0){chosen=c.q;break}}
   const x=st[chosen.id]||{no:0,total:0};
-  const reason=x.total?`過去の記録で「できなかった」が ${x.no}/${x.total} 回。重要度も考慮して選出しました。`:'まだ記録が少ない項目から、ランダム性を残して選出しました。';
+  const reason=x.total?`過去の記録で「できなかった」が ${x.no}/${x.total} 回あったにゃ。重要度も考えて選んだにゃ。`:'記録が少ない項目から、ランダム性を残して選んだにゃ🐾';
   gh.push({id:chosen.id,at:new Date().toISOString()});
   saveGoalHistory(gh.slice(-100));
   return {q:chosen,reason};
@@ -732,9 +908,9 @@ function selectTodayGoal(){
 function renderHome(){
   const goal=selectTodayGoal();
   document.getElementById('todayGoal').textContent=goal.q.title;
-  document.getElementById('goalReason').textContent=goal.reason;
+  document.getElementById('goalReason').textContent=catCoachLine(goal.reason);
   const d=new Date();
-  document.getElementById('dailyTip').textContent=TIPS[d.getDate()%TIPS.length];
+  document.getElementById('dailyTip').textContent=catCoachLine(TIPS[d.getDate()%TIPS.length]);
 }
 
 /* =========================
@@ -794,6 +970,8 @@ function renderGrowth(){
     return {...q,c,cr,pr,delta};
   }).filter(x=>x.c.total>0).sort((a,b)=>(a.delta??-99)-(b.delta??-99));
   const improved=rows.filter(x=>x.delta!==null).sort((a,b)=>b.delta-a.delta).slice(0,3);
+  const clearImprovement=improved.find(x=>x.delta>0);
+  const improvementCheer=clearImprovement?`にゃにゃ！「${escapeHTML(clearImprovement.title)}」が前期間より${Math.round(clearImprovement.delta*100)}ポイント改善。変化に気づいて続けられてるの、にゃいす！！🐾`:'数値にまだ変化が見えなくても、記録を続けて振り返れているのが大切な一歩にゃ🐾';
   const worsened=rows.filter(x=>x.delta!==null).sort((a,b)=>a.delta-b.delta).slice(0,3);
   const mastered=rows.filter(x=>x.c.total>=3&&x.cr!==null&&x.cr>=.8).sort((a,b)=>b.cr-a.cr).slice(0,5);
   const stable=rows.filter(x=>x.c.total>=3&&x.cr!==null&&Math.abs(x.delta||0)<.03).sort((a,b)=>b.cr-a.cr).slice(0,5);
@@ -820,7 +998,7 @@ function renderGrowth(){
   const categoryHtml=catRows.length?catRows.map(([name,x])=>{
     const r=x.total?x.yes/x.total:0;
     return `<div class="growth-row"><div class="growth-flex"><b>${escapeHTML(name)}</b><b>${Math.round(r*100)}%</b></div><div class="growth-bar"><span style="width:${Math.round(r*100)}%"></span></div><div class="mini">${x.total}回答 / ○${x.yes} ×${x.no}</div></div>`;
-  }).join(''):'<p class="muted">まだ十分なデータがありません。</p>';
+  }).join(''):'<p class="muted">まだ十分なデータがそろっていないにゃ。記録を重ねると傾向を見られるにゃ🐾</p>';
 
   const detailHtml=rows.length?rows.map(x=>{
     const [label,cls]=trendLabel(x.delta);
@@ -829,20 +1007,21 @@ function renderGrowth(){
       <div class="growth-bar"><span style="width:${x.cr===null?0:Math.round(x.cr*100)}%"></span></div>
       <div class="mini">現在 ${pct(x.cr)}　｜　比較 ${pct(x.pr)}　｜　変化 ${x.delta===null?'データ不足':((x.delta>=0?'+':'')+Math.round(x.delta*100)+'pt')}　｜　○${x.c.yes} ×${x.c.no} ―${x.c.na}</div>
     </div>`;
-  }).join(''):'<p>まず3試合記録すると、細かな成長分析が始まります。</p>';
+  }).join(''):'<p>まず3戦闘を記録すると、細かな成長分析を見られるにゃ🐾</p>';
 
   const overallDelta=(cur.rate!==null&&prev.rate!==null)?cur.rate-prev.rate:null;
   const [overallLabel,overallCls]=trendLabel(overallDelta);
   const dataNotice=all.length<10
-    ?`<div class="notice">💡 現在${all.length}戦闘を記録しています。10戦闘程度記録すると、直近と過去の傾向比較がより安定します。</div>`
+    ?`<div class="notice">💡 現在${all.length}戦闘を記録しているにゃ。10戦闘ほど記録すると、直近と過去の傾向をより安定して比べられるにゃ🐾</div>`
     :'';
 
   document.getElementById('growthContent').innerHTML=`
     <div class="card">
       <h2>📊 成長を見る</h2>
+      <p class="notice">${improvementCheer}</p>
       <div class="growth-toolbar">
-        <button class="${mode==='3'?'active':''}" onclick="setGrowthMode('3')">直近3試合</button>
-        <button class="${mode==='10'?'active':''}" onclick="setGrowthMode('10')">直近10試合</button>
+        <button class="${mode==='3'?'active':''}" onclick="setGrowthMode('3')">直近3戦闘</button>
+        <button class="${mode==='10'?'active':''}" onclick="setGrowthMode('10')">直近10戦闘</button>
         <button class="${mode==='all'?'active':''}" onclick="setGrowthMode('all')">全期間</button>
       </div>
       ${dataNotice}
@@ -852,27 +1031,27 @@ function renderGrowth(){
         <div class="stat">○率<br><b>${pct(cur.rate)}</b></div>
         <div class="stat">前期間比<br><b class="${overallCls}">${overallDelta===null?'—':((overallDelta>=0?'+':'')+Math.round(overallDelta*100)+'pt')}</b></div>
       </div>
-      <p class="${overallCls}">${overallLabel}${overallDelta===null?'：比較できる過去データが不足しています。':''}</p>
+      <p class="${overallCls}">${overallLabel}${overallDelta===null?'：前の期間と比べるデータがまだ足りないにゃ。記録を重ねていこう🐾':''}</p>
     </div>
 
     <div class="card">
-      <h3>🏆 伸びた項目 TOP3</h3>
-      ${cardRows(improved,'前期間との比較に必要なデータがまだありません。')}
+      <h3>🏆 にゃいす！伸びた項目 TOP3</h3>
+      ${cardRows(improved,'前の期間と比べるデータがまだないにゃ。記録を重ねていこう🐾')}
     </div>
 
     <div class="card">
       <h3>⚠️ 最近悪化している項目 TOP3</h3>
-      ${cardRows(worsened,'前期間との比較に必要なデータがまだありません。')}
+      ${cardRows(worsened,'前の期間と比べるデータがまだないにゃ。記録を重ねていこう🐾')}
     </div>
 
     <div class="card">
-      <h3>🎉 克服・安定してきた項目</h3>
-      ${mastered.length?mastered.map(x=>`<div class="growth-row"><b>🟢 ${escapeHTML(x.title)}</b><div class="mini">現在 ${pct(x.cr)}　｜　${x.c.total}回答　｜　重要度 ${x.importance}/3</div></div>`).join(''):'<p class="muted">3回以上記録され、80%以上で安定している項目はまだありません。</p>'}
+      <h3>🎉 にゃいす！克服・安定してきた項目</h3>
+      ${mastered.length?mastered.map(x=>`<div class="growth-row"><b>🟢 ${escapeHTML(x.title)}</b><div class="mini">現在 ${pct(x.cr)}　｜　${x.c.total}回答　｜　重要度 ${x.importance}/3</div></div>`).join(''):'<p class="muted">3回以上の回答で○率80%以上になると、安定している項目に表示されるにゃ。これから一緒に見つけていこう🐾</p>'}
     </div>
 
     <div class="card">
       <h3>🧊 安定している項目</h3>
-      ${stable.length?stable.map(x=>`<div class="growth-row"><div class="growth-flex"><b>${escapeHTML(x.title)}</b><b>${pct(x.cr)}</b></div><div class="mini">最近の変化が小さく、安定しています。</div></div>`).join(''):'<p class="muted">まだ安定判定できるデータがありません。</p>'}
+      ${stable.length?stable.map(x=>`<div class="growth-row"><div class="growth-flex"><b>${escapeHTML(x.title)}</b><b>${pct(x.cr)}</b></div><div class="mini">最近の変化が小さく、安定しているにゃ🐾</div></div>`).join(''):'<p class="muted">安定しているか判断する記録がまだ足りないにゃ。少しずつ見ていこう🐾</p>'}
     </div>
 
     <div class="card">
@@ -882,14 +1061,14 @@ function renderGrowth(){
 
     <div class="card">
       <h3>📈 成長推移</h3>
-      <p class="muted">記録した戦闘ごとの○率の変化</p>
+      <p class="muted">記録した戦闘ごとの○率の変化を見ていくにゃ🐾</p>
       ${(()=>{
         const points=all.map((b,i)=>{
           const vals=Object.values(b.answers||{}).filter(v=>v==='yes'||v==='no'||v==='na');
           const yes=vals.filter(v=>v==='yes').length;
           return {i,rate:vals.length?yes/vals.length:null};
         }).filter(x=>x.rate!==null);
-        if(!points.length)return '<p class="muted">戦闘記録があると成長推移を表示できます。</p>';
+        if(!points.length)return '<p class="muted">戦闘を記録すると、成長の推移を見られるにゃ🐾</p>';
         const W=Math.max(700,points.length*58),H=300,L=62,R=24,T=28,B=52;
         const x=i=>points.length===1?W/2:L+(W-L-R)*i/(points.length-1);
         const y=v=>T+(H-T-B)*(1-v);
@@ -910,9 +1089,10 @@ function renderGrowth(){
 
     <div class="card">
       <h3>🎯 コーチング判定</h3>
-      <p>${worsened[0]?`最近もっとも悪化しているのは <b>${escapeHTML(worsened[0].title)}</b>。直近の練習・試合ではここを重点的に見直そう。`:'まずは記録を増やして、変化を比較できるようにしよう。'}</p>
-      <p>${improved[0]?`一方、<b>${escapeHTML(improved[0].title)}</b> は ${Math.round(improved[0].delta*100)}pt 改善。ここは成長が確認できています。`:''}</p>
+      <p>${worsened[0]?`最近つまずきが多いのは <b>${escapeHTML(worsened[0].title)}</b>。直近の振り返りでは、この場面で別の選択肢も一緒に考えてみようにゃ🐾`:'まずは記録を増やして、変化を比較できるようにしよう。'}</p>
+      <p>${improved[0]?`一方、<b>${escapeHTML(improved[0].title)}</b> は ${Math.round(improved[0].delta*100)}pt 改善。ちゃんと成長が見えてるにゃ🐾`:''}</p>
     </div>`;
+  catifyUserMessages(document.getElementById('growthContent'));
 }
 function setGrowthMode(mode){
   window.growthMode=mode;
@@ -953,10 +1133,13 @@ function renderWeakness(){
     <div class="growth-row">
       <b>#${i+1} ${escapeHTML(q.title)}</b>
       <div class="mini">○率 ${Math.round((1-q.failRate)*100)}%　｜　× ${q.stats.no}回　｜　${q.stats.total}回答</div>
-    </div>`).join(''):'<p class="muted">まだ十分なデータがありません。</p>';
+    </div>`).join(''):'<p class="muted">まだ十分なデータがそろっていないにゃ。記録を重ねると傾向を見られるにゃ🐾</p>';
 
   const allMatches=growthAllMatches();
   const latest=allMatches.slice(-1);
+  const outcomeCounts=allMatches.reduce((a,m)=>{if(m.engagementOutcome&&a[m.engagementOutcome]!==undefined)a[m.engagementOutcome]++;return a;},{survived:0,death:0,retreat:0});
+  const outcomeLabel={survived:'生存',death:'死亡',retreat:'戦略的撤退'};
+  const latestOutcomeHtml=latest.map(m=>`<div class="notice">今回の戦闘分類：${escapeHTML(outcomeLabel[m.engagementOutcome]||'未記録')}。ノック・死亡・勝敗は別項目として記録しているにゃ。</div>`).join('');
   const latest3=allMatches.slice(-3);
   const latest10=allMatches.slice(-10);
   const allStats=analysisStatsForMatches(allMatches);
@@ -965,17 +1148,17 @@ function renderWeakness(){
   const latestStats=analysisStatsForMatches(latest);
   const categoryStats=analysisCategoryStats(allMatches);
   const categoryRows=Object.entries(categoryStats).map(([name,x])=>({name,...x,rate:x.total?x.yes/x.total:null})).sort((a,b)=>a.rate-b.rate);
-  const catHtml=categoryRows.length?categoryRows.map(x=>`<div class="growth-row"><div class="growth-flex"><b>${escapeHTML(x.name)}</b><b>${analysisPct(x.rate)}</b></div><div class="growth-bar"><span style="width:${Math.round(x.rate*100)}%"></span></div><div class="mini">○${x.yes} ×${x.no} ／ ${x.total}回答</div></div>`).join(''):'<p class="muted">分野別の回答がまだありません。</p>';
+  const catHtml=categoryRows.length?categoryRows.map(x=>`<div class="growth-row"><div class="growth-flex"><b>${escapeHTML(x.name)}</b><b>${analysisPct(x.rate)}</b></div><div class="growth-bar"><span style="width:${Math.round(x.rate*100)}%"></span></div><div class="mini">○${x.yes} ×${x.no} ／ ${x.total}回答</div></div>`).join(''):'<p class="muted">分野別の回答がまだないにゃ。記録が増えると傾向を見られるにゃ🐾</p>';
   const categoryWindows=[analysisCategoryStats(latest),analysisCategoryStats(latest3),analysisCategoryStats(latest10),categoryStats];
   const categoryWindowNames=['今回','直近3戦','直近10戦','全期間'];
   const allCategoryNames=[...new Set(categoryWindows.flatMap(x=>Object.keys(x)))];
-  const catPeriodHtml=allCategoryNames.length?allCategoryNames.map(name=>`<div class="growth-row"><b>${escapeHTML(name)}</b><div class="mini">${categoryWindowNames.map((windowName,i)=>{const x=categoryWindows[i][name],rate=x&&x.total?x.yes/x.total:null;return `${windowName}：${analysisPct(rate)}${x?`（○${x.yes} ×${x.no}）`:''}`;}).join('　｜　')}</div></div>`).join(''):'<p class="muted">分野別の回答がまだありません。</p>';
+  const catPeriodHtml=allCategoryNames.length?allCategoryNames.map(name=>`<div class="growth-row"><b>${escapeHTML(name)}</b><div class="mini">${categoryWindowNames.map((windowName,i)=>{const x=categoryWindows[i][name],rate=x&&x.total?x.yes/x.total:null;return `${windowName}：${analysisPct(rate)}${x?`（○${x.yes} ×${x.no}）`:''}`;}).join('　｜　')}</div></div>`).join(''):'<p class="muted">分野別の回答がまだないにゃ。記録が増えると傾向を見られるにゃ🐾</p>';
   const latestHtml=latest.length?latest.map(m=>{
     const answered=Object.entries(m.answers||{}).filter(([,v])=>v==='yes'||v==='no');
     const bad=answered.filter(([,v])=>v==='no').map(([id])=>QUESTIONS.find(q=>q.id===id)).filter(Boolean);
     const good=answered.filter(([,v])=>v==='yes').map(([id])=>QUESTIONS.find(q=>q.id===id)).filter(Boolean);
     return `<div class="growth-row"><b>今回：${escapeHTML(m.legend||'未記録')} ／ ${m.knocks===5?'5+':(m.knocks??'—')}ノック ／ ${m.battleResult==='win'?'勝利':m.battleResult==='loss'?'敗北':'勝敗未記録'}</b><div class="mini">できた：${good.length?good.map(q=>escapeHTML(q.title)).join('、'):'該当なし'}<br>できなかった：${bad.length?bad.map(q=>escapeHTML(q.title)).join('、'):'該当なし'}</div></div>`;
-  }).join(''):'<p class="muted">今回の戦闘記録はまだありません。</p>';
+  }).join(''):'<p class="muted">今回の戦闘記録はまだないにゃ。記録するとここに振り返りが出るにゃ🐾</p>';
   const scopeLine=(id,stats)=>{
     const x=stats[id];return x&&x.total?`${analysisPct(x.yes/x.total)}（○${x.yes} / ×${x.no}）`:'データなし';
   };
@@ -988,10 +1171,10 @@ function renderWeakness(){
     const failedWins=failed.filter(m=>m.battleResult==='win').length;
     const category=categoryStats[q.category]||{yes:0,no:0,total:0};
     const linkedText=linked.map(x=>`「${escapeHTML(x.q.title)}」が${x.n}/${failed.length}戦闘`).join('、');
-    const reason=linked.length?`同じ戦闘では${linkedText}となり、×が重なる傾向です。`:`同じ分野「${escapeHTML(q.category)}」の○率は${category.total?analysisPct(category.yes/category.total):'データ不足'}です。`;
-    const outcome=failed.length?`この質問が×の戦闘は${failed.length}件${failedKnocks.length?`、平均${(failedKnocks.reduce((a,b)=>a+b,0)/failedKnocks.length).toFixed(1)}ノック`:''}${failed.some(m=>m.battleResult==='win'||m.battleResult==='loss')?`、勝率${analysisPct(failedWins/failed.filter(m=>m.battleResult==='win'||m.battleResult==='loss').length)}`:''}。`:'記録が少ないため結果との関係はまだ見られません。';
-    return `<div class="growth-row"><b>${escapeHTML(q.title)}</b><div class="mini">${reason}${outcome}<br><b>確認する点：</b>${escapeHTML(PRACTICE[q.id]||'同じ分野の関連項目も振り返り、共通する場面を探しましょう。')}</div></div>`;
-  }).join('')||'<p class="muted">課題分析に必要な回答がまだありません。</p>';
+    const reason=linked.length?`同じ戦闘では${linkedText}となり、×が重なる傾向があるにゃ。`:`同じ分野「${escapeHTML(q.category)}」の○率は${category.total?analysisPct(category.yes/category.total):'データ不足'}だにゃ。`;
+    const outcome=failed.length?`この質問が×だった戦闘は${failed.length}件${failedKnocks.length?`、平均${(failedKnocks.reduce((a,b)=>a+b,0)/failedKnocks.length).toFixed(1)}ノック`:''}${failed.some(m=>m.battleResult==='win'||m.battleResult==='loss')?`、勝率${analysisPct(failedWins/failed.filter(m=>m.battleResult==='win'||m.battleResult==='loss').length)}`:''}。`:'記録が少なくて、まだ結果との関係は見えないにゃ。';
+    return `<div class="growth-row"><b>${escapeHTML(q.title)}</b><div class="mini">${reason}${outcome}<br><b>次に試すこと：</b>${escapeHTML(catCoachLine(PRACTICE[q.id]||'同じ分野の関連項目も振り返り、共通する場面を探してみるにゃ。'))}</div></div>`;
+  }).join('')||'<p class="muted">課題を分析する回答がまだないにゃ。記録を続けて一緒に見つけていこう🐾</p>';
 
   const legendMap={};
   allMatches.forEach(b=>{
@@ -1026,17 +1209,18 @@ function renderWeakness(){
     const trendRows=(arr,icon)=>arr.length?arr.map(x=>`<div class="growth-row"><div class="growth-flex"><b>${icon} ${escapeHTML(x.q.title)}</b><b>${Math.round(x.rate*100)}%</b></div><div class="mini">分野：${groupLabel(x.q)}　｜　○${s.answers[x.q.id].yes} ×${s.answers[x.q.id].no}</div></div>`).join(''):'<p class="muted">まだ十分な傾向データがありません。</p>';
     const positive=legendCats.slice().reverse().find(x=>x.total>=2);
     const negative=legendCats.find(x=>x.total>=2);
-    const trendSentence=positive&&negative?`${escapeHTML(positive.name)}分野は○率${analysisPct(positive.rate)}で、${escapeHTML(positive.name)}の行動ができている傾向です。${positive.name!==negative.name?`${escapeHTML(negative.name)}分野は○率${analysisPct(negative.rate)}で、${escapeHTML(negative.name)}に課題が出やすい傾向があります。`:''}`:strong.length?`${escapeHTML(strong[0].q.title)}ができている傾向があります。${weak.length?`一方、${escapeHTML(weak[0].q.title)}は改善余地があります。`:''}`:'回答数が少ないため、傾向を判断するにはもう少し記録が必要です。';
-    const legendCategoryHtml=legendCats.length?legendCats.map(x=>`<div class="growth-row"><div class="growth-flex"><b>${escapeHTML(x.name)}</b><b>${analysisPct(x.rate)}</b></div><div class="growth-bar"><span style="width:${Math.round(x.rate*100)}%"></span></div><div class="mini">○${x.yes} ×${x.no} ／ ${x.total}回答</div></div>`).join(''):'<p class="muted">分野別データがありません。</p>';
-    const advice=weak[0]?PRACTICE[weak[0].q.id]||`${weak[0].q.category||weak[0].q.group}を意識し、味方とカバーし合える位置で行動しましょう。`:'回答を記録するとレジェンドに合わせた対策を表示します。';
-    return `<div class="card"><h3>${escapeHTML(lg)}</h3><div class="statgrid"><div class="stat">使用戦闘数<br><b>${s.n}</b></div><div class="stat">平均ノック<br><b>${avg===null?'—':avg.toFixed(1)}</b></div><div class="stat">勝率<br><b>${s.knownResults?analysisPct(s.wins/s.knownResults):'—'}</b></div><div class="stat">回答○率<br><b>${validAnswers?analysisPct(yesAll/validAnswers):'—'}</b></div></div><p><b>傾向：</b>${trendSentence}</p><h4>分野別○率</h4>${legendCategoryHtml}<h4>⭕ 得意な行動</h4>${trendRows(strong,'○')}<h4>⚠️ 苦手な行動</h4>${trendRows(weak,'△')}<p><b>対策：</b>${escapeHTML(advice)}</p></div>`;
-  }).join('')||'<p class="muted">レジェンド別分析に必要なデータがまだありません。</p>';
+    const trendSentence=positive&&negative?`${escapeHTML(positive.name)}分野は○率${analysisPct(positive.rate)}で、その分野の行動ができている傾向にゃ。${positive.name!==negative.name?`${escapeHTML(negative.name)}分野は○率${analysisPct(negative.rate)}で、課題が出やすい傾向があるにゃ。`:''}`:strong.length?`${escapeHTML(strong[0].q.title)}ができている傾向にゃ。${weak.length?`一方、${escapeHTML(weak[0].q.title)}は改善の余地があるにゃ。`:''}`:'回答数がまだ少ないにゃ。傾向を見るため、もう少し一緒に記録していこう🐾';
+    const legendCategoryHtml=legendCats.length?legendCats.map(x=>`<div class="growth-row"><div class="growth-flex"><b>${escapeHTML(x.name)}</b><b>${analysisPct(x.rate)}</b></div><div class="growth-bar"><span style="width:${Math.round(x.rate*100)}%"></span></div><div class="mini">○${x.yes} ×${x.no} ／ ${x.total}回答</div></div>`).join(''):'<p class="muted">分野別データがまだないにゃ。</p>';
+    const advice=weak[0]?PRACTICE[weak[0].q.id]||`${weak[0].q.category||weak[0].q.group}を意識し、味方とカバーし合える位置で行動しましょう。`:'記録を重ねると、レジェンドに合わせた対策を見られるにゃ🐾';
+    return `<div class="card"><h3>${escapeHTML(lg)}</h3><div class="statgrid"><div class="stat">使用戦闘数<br><b>${s.n}</b></div><div class="stat">平均ノック<br><b>${avg===null?'—':avg.toFixed(1)}</b></div><div class="stat">勝率<br><b>${s.knownResults?analysisPct(s.wins/s.knownResults):'—'}</b></div><div class="stat">回答○率<br><b>${validAnswers?analysisPct(yesAll/validAnswers):'—'}</b></div></div><p><b>傾向：</b>${trendSentence}</p><h4>分野別○率</h4>${legendCategoryHtml}<h4>⭕ 得意な行動</h4>${trendRows(strong,'○')}<h4>⚠️ 苦手な行動</h4>${trendRows(weak,'△')}<p><b>対策：</b>${escapeHTML(catCoachLine(advice))}</p></div>`;
+  }).join('')||'<p class="muted">レジェンド別分析の記録がまだないにゃ。少しずつ一緒に見ていこう🐾</p>';
 
-  const dataNotice=allMatches.length<10?`<div class="notice">現在${allMatches.length}戦闘を記録しています。10戦闘程度記録すると、分野やレジェンドごとの傾向がより安定します。少ない記録では参考値として見てください。</div>`:'';
+  const dataNotice=allMatches.length<10?`<div class="notice">現在${allMatches.length}戦闘を記録しているにゃ。10戦闘ほど記録すると、分野やレジェンドごとの傾向がより安定するにゃ。記録が少ない間は参考値として見てほしいにゃ🐾</div>`:'';
   document.getElementById('weaknessContent').innerHTML=`
     <div class="card"><h2>🧠 現状分析・対策</h2>
       ${dataNotice}
-      <h3>今回の戦闘</h3>${latestHtml}
+      <h3>今回の戦闘</h3>${latestOutcomeHtml}${latestHtml}
+      <p class="mini">全期間の戦闘分類：生存 ${outcomeCounts.survived} ／ 死亡 ${outcomeCounts.death} ／ 戦略的撤退 ${outcomeCounts.retreat}。戦略的撤退は勝敗や質問の○率に自動で加点・減点しないにゃ。</p>
       <h3>📅 期間ごとのデータ</h3><div class="statgrid"><div class="stat">今回<br><b>${latest.length}戦闘</b></div><div class="stat">直近3戦<br><b>${latest3.length}戦闘</b></div><div class="stat">直近10戦<br><b>${latest10.length}戦闘</b></div><div class="stat">全期間<br><b>${allMatches.length}戦闘</b></div></div>
       <p class="mini">質問ごとの比較：今回 ${latest.length?scopeLine('coverReceived',latestStats):'データなし'}　｜　直近3戦 ${scopeLine('coverReceived',recent3Stats)}　｜　直近10戦 ${scopeLine('coverReceived',recent10Stats)}　｜　全期間 ${scopeLine('coverReceived',allStats)}（例：カバーをもらえる位置）</p>
       ${weakest.length?weakest.slice(0,5).map((q,i)=>`
@@ -1044,28 +1228,42 @@ function renderWeakness(){
         <h3>#${i+1} ${escapeHTML(q.title)}</h3>
         <p>分野：${escapeHTML(q.category)}　｜　重要度：${q.importance}/3　｜　× ${q.stats.no}回　｜　失敗率 ${Math.round(q.failRate*100)}%</p>
         <p class="mini">今回 ${scopeLine(q.id,latestStats)}　｜　直近3戦 ${scopeLine(q.id,recent3Stats)}　｜　直近10戦 ${scopeLine(q.id,recent10Stats)}　｜　全期間 ${scopeLine(q.id,allStats)}</p>
-        <p><b>練習：</b>${escapeHTML(PRACTICE[q.id]||'実戦で意識して振り返ろう。')}</p>
-      </div>`).join(''):'<p>まだ記録がありません。まず3戦闘記録すると、現状分析が始まります。</p>'}
+        <p><b>練習：</b>${escapeHTML(catCoachLine(PRACTICE[q.id]||'実戦で意識して振り返ってみるにゃ。'))}</p>
+      </div>`).join(''):'<p>まだ記録がないにゃ。まず3戦闘を記録すると現状分析を見られるにゃ🐾</p>'}
     </div>
-    <div class="card"><h3>🔎 傾向の背景</h3><p class="muted">同じ戦闘で重なった回答や結果を手がかりにした関連傾向です。原因を断定するものではありません。</p>${explanationHtml}</div>
+    <div class="card"><h3>🔎 傾向の背景</h3><p class="muted">同じ戦闘で重なった回答や結果を手がかりに、関連する傾向を表示しているにゃ。原因を断定するものではないにゃ。</p>${explanationHtml}</div>
     <div class="card"><h3>🏆 上位3つ</h3>${rows(top3)}</div>
     <div class="card"><h3>⚠️ 下位3つ</h3>${rows(bottom3)}</div>
     <div class="card"><h3>🗂️ 分野別分析</h3>${catHtml}</div>
     <div class="card"><h3>📊 分野別・期間比較</h3>${catPeriodHtml}</div>
     <div class="card"><h3>🎮 レジェンド別・1戦闘ノック数と傾向</h3>${legendHtml}</div>`;
+  catifyUserMessages(document.getElementById('weaknessContent'));
 }
 
 function renderPractice(){
   const top=weaknessScores().find(q=>q.stats.total>0);
   const q=top||QUESTIONS[0];
-  document.getElementById('practiceContent').innerHTML=`
+  document.getElementById('practiceContent').innerHTML=catifyInstructionMarkup(`
     <div class="card"><h2>🏋️ 練習する</h2>
       <h3>今日の重点：${escapeHTML(q.title)}</h3>
-      <p>${escapeHTML(PRACTICE[q.id]||'実戦で意識して練習しよう。')}</p>
+      <p>${escapeHTML(catCoachLine(PRACTICE[q.id]||'実戦で意識して練習してみるにゃ。'))}</p>
     </div>
     <div class="card"><h3>🔁 共通メニュー</h3>
-      <ul class="list"><li>遮蔽から左右を変えてピーク</li><li>同じ場所から連続リピークしない</li><li>味方のカバーが取れる範囲で展開</li><li>撃ち合い後は敵・安置・漁夫を確認してリセット</li></ul>
-    </div>`;
+      <ul class="list"><li>遮蔽から左右を変えてピークしてみるにゃ</li><li>同じ場所から連続リピークしないようにするにゃ</li><li>味方のカバーが届く範囲で展開してみるにゃ</li><li>撃ち合い後は敵・安置・漁夫を確認してリセットするにゃ</li></ul>
+    </div>`);
+}
+
+function renderAdvanced(){
+  const host=document.getElementById('advancedContent'),mastery=foundationMastery();
+  if(!mastery.ready){
+    host.innerHTML=catifyInstructionMarkup(`<div class="card"><h2>🐈‍⬛ ねこ上級講座</h2><p>上級編は、基礎をある程度身につけてから段階的に扱うにゃ。まずは基礎項目の記録を重ねていこうにゃ🐾</p><div class="statgrid"><div class="stat">基礎項目の回答<br><b>${mastery.total}/12</b></div><div class="stat">基礎の○率<br><b>${mastery.total?Math.round(mastery.rate*100)+'%':'—'}</b></div></div><p class="muted">基礎項目の回答が12件以上、○率72%以上になると上級編が開きます。これは判断の幅を広げるための目安で、戦闘の正解を決める基準ではないにゃ🐾</p></div>`);
+    return;
+  }
+  host.innerHTML=catifyInstructionMarkup(`<div class="card"><h2>🐈‍⬛ ねこ上級講座</h2><p>ここからは状況を読むための選択肢にゃ。いつも実行する正解ではないから、生存・エリア・味方の状態に合わせて使ってみるにゃ🐾</p></div>
+  <div class="card"><h3>エリア管理</h3><ul class="list"><li>最終安置で、遮蔽・高所・射線・敵の侵入経路を見ながら広く強いエリアを保つ</li><li>終盤に移動できる余地を残す</li><li>安置外を背にして背面を管理する方法もあるが、安置から入る敵などの例外を警戒する</li></ul></div>
+  <div class="card"><h3>サークル理論</h3><ul class="list"><li>味方3人の位置を味方サークル、敵3人の位置を敵サークルとして捉える</li><li>敵の展開に合わせて味方も位置を広げ、敵の動ける範囲を囲う</li><li>孤立した敵が見えても、味方の射線と退路を確保してからサークルを縮める</li></ul></div>
+  <div class="card"><h3>終盤判断</h3><ul class="list"><li>安置が狭い時や部隊数が少ない時は、漁夫・複数射線・移動余地を警戒する</li><li>戦闘を避けること自体を固定ルールにしない。エリア・情報・リソース・敵の消耗など目的のある戦闘も比べる</li><li>残り3部隊では、傍観と、敵同士を消耗させる有利な介入の両方を状況に応じて選ぶ</li></ul></div>
+  <div class="card"><h3>ミラーリングケア</h3><p>接敵中は、後方から追随する別部隊と目の前の敵に挟まれる形を避けたいにゃ。挟まれる前に戦闘を切り上げるか、位置を変えられるか確認してみるにゃ🐾</p></div>`);
 }
 
 function answerSymbol(v){
@@ -1081,7 +1279,7 @@ function renderHistory(){
           <details><summary>詳細を見る</summary>
             ${(r.matches||[]).map(m=>`
               <div class="card">
-                <b>第${m.match}戦闘</b>　🦾 ${escapeHTML(m.legend||'未記録')}　☠️ ${m.knocks===5?'5+':(m.knocks??'—')}ノック　${m.battleResult==='win'?'🏆 勝利':m.battleResult==='loss'?'💀 敗北':'—'}
+                <b>第${m.match}戦闘</b>　🦾 ${escapeHTML(m.legend||'未記録')}　☠️ ${m.knocks===5?'5+':(m.knocks??'—')}ノック　${m.engagementOutcome==='retreat'?'↩️ 戦略的撤退':m.engagementOutcome==='death'?'☠️ 死亡':m.engagementOutcome==='survived'?'🟢 生存':''}　${m.battleResult==='win'?'🏆 勝利':m.battleResult==='loss'?'💀 敗北':m.battleResult==='none'?'— 勝敗なし':'—'}
                 ${Object.entries(m.answers||{}).map(([id,v])=>{
                   const q=QUESTIONS.find(x=>x.id===id);
                   return `<div class="answer-row"><span>${escapeHTML(q?q.title:id)}</span><b>${answerSymbol(v)}</b></div>`;
@@ -1097,10 +1295,10 @@ function renderStrong(){
   const mastered=weaknessScores().filter(q=>q.stats.total>=3&&q.failRate<=.2).length;
   document.getElementById('strongContent').innerHTML=`
     <div class="card"><h2>🏆 最強を目指す</h2>
-      <p>戦う → 記録する → 弱点を見つける → 練習する → 再評価する。このループを回そう。</p>
+      <p>戦う → 記録する → 課題を見つける → 練習する → 再評価する。このループを一緒に回していこうにゃ🐾</p>
       <div class="statgrid"><div class="stat">記録セット<br><b>${rs.length}</b></div><div class="stat">安定項目<br><b>${mastered}</b></div></div>
     </div>
-    <div class="card"><h3>🎯 次に倒す壁</h3><p>${top?escapeHTML(top.title):'まずは3試合記録しよう！'}</p></div>`;
+    <div class="card"><h3>🎯 次に倒す壁</h3><p>${top?escapeHTML(top.title):'まずは3戦闘記録してみようにゃ！🐾'}</p></div>`;
 }
 
 /* =========================
@@ -1111,7 +1309,7 @@ function exportData(){
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
-  a.download=`apex-super-coaching-backup-${dateJP()}.json`;
+  a.download=`nekoaching-backup-${dateJP()}.json`;
   document.body.appendChild(a);a.click();a.remove();
   setTimeout(()=>URL.revokeObjectURL(a.href),1000);
 }
@@ -1121,12 +1319,12 @@ function importData(event){
   const reader=new FileReader();
   reader.onload=()=>{
     const data=parseJSON(reader.result,null);
-    if(!data||!Array.isArray(data.records)){alert('バックアップ形式が正しくありません。');return}
-    if(!confirm(`${data.records.length}件の記録を復元します。現在の記録に追加しますか？`))return;
+    if(!data||!Array.isArray(data.records)){alert('にゃん…？バックアップ形式を読み込めなかったにゃ。ファイルを確認してみてほしいにゃ🐾');return}
+    if(!confirm(`${data.records.length}件の記録を復元して、今の記録に追加するにゃ。よろしいかにゃ？`))return;
     const merged=[...records(),...data.records];
     saveRecords(merged);
     if(Array.isArray(data.goalHistory))saveGoalHistory([...goalHistory(),...data.goalHistory].slice(-100));
-    alert('復元しました。');
+    alert('バックアップを復元できたにゃ！記録を続けていこう🐾');
     renderHome();
   };
   reader.readAsText(file);
@@ -1151,28 +1349,48 @@ function shareDecode(code){
 function shareRecordKey(x){
   return JSON.stringify({date:x&&x.date||'',matches:x&&x.matches||[]});
 }
+function recordsWithOutcomeForA3(input){
+  return (input||[]).map(record=>({...record,matches:(record.matches||[]).map(match=>{
+    const answers={...(match.answers||{})};
+    const outcome=match.engagementOutcome||'';
+    if(outcome)answers.__coachOutcome=({survived:'yes',death:'no',retreat:'na'})[outcome]||'';
+    if(match.battleResult==='none')answers.__coachNoBattleResult='yes';
+    return {...match,battleResult:match.battleResult==='none'?'loss':match.battleResult,answers};
+  })}));
+}
+function restoreOutcomeFromA3(input){
+  for(const record of input||[])for(const match of record.matches||[]){
+    const answers=match.answers||{};
+    const value=answers.__coachOutcome;
+    if(value)match.engagementOutcome=({yes:'survived',no:'death',na:'retreat'})[value]||'';
+    if(answers.__coachNoBattleResult==='yes')match.battleResult='none';
+    delete answers.__coachOutcome;delete answers.__coachNoBattleResult;
+  }
+  return input;
+}
+
 function createShareCode(){
   const box=document.getElementById('shareCode');
   const status=document.getElementById('shareStatus');
   try{
     const savedRecords=records();
-    box.value = generateA3ShareCode(savedRecords);
-    status.textContent=`A3共有コードを作成しました（${savedRecords.length}件の記録）。外部サーバーには送信していません。`;
+    box.value = generateA3ShareCode(recordsWithOutcomeForA3(savedRecords));
+    status.textContent=`A3共有コードを作成できたにゃ（${savedRecords.length}件の記録）。外部サーバーには送信していないにゃ🐾`;
     box.focus();box.select();
   }catch(e){
-    status.textContent='共有コードの作成に失敗しました。';
+    status.textContent='にゃん…？共有コードを作れなかったにゃ。もう一度試してみてほしいにゃ🐾';
   }
 }
 async function copyShareCode(){
   const box=document.getElementById('shareCode');
   const status=document.getElementById('shareStatus');
-  if(!box.value){status.textContent='先に共有コードを作成してください。';return}
+  if(!box.value){status.textContent='先に共有コードを作ってほしいにゃ🐾';return}
   try{
     await navigator.clipboard.writeText(box.value);
-    status.textContent='共有コードをコピーしました。';
+    status.textContent='共有コードをコピーできたにゃ🐾';
   }catch(e){
     box.focus();box.select();
-    status.textContent='コードを選択しました。コピーしてください。';
+    status.textContent='コードを選択したにゃ。コピーして使ってほしいにゃ🐾';
   }
 }
 function importShareCode(){
@@ -1181,14 +1399,15 @@ function importShareCode(){
   if(input.startsWith('A3-')){
     const compact=packedShareDecode(input);
     const decodedRecords=compact&&(Array.isArray(compact.records)?compact.records:(Array.isArray(compact.matches)?[{date:compact.date,battleDate:compact.date,matches:compact.matches}]:null));
+    if(decodedRecords)restoreOutcomeFromA3(decodedRecords);
     const status=document.getElementById('shareStatus');
-    if(!decodedRecords){status.textContent='A3共有コードを読み込めませんでした。';return;}
+    if(!decodedRecords){status.textContent='にゃん…？A3共有コードを読み込めなかったにゃ。コードを確認してみてほしいにゃ🐾';return;}
     const current=records(),seen=new Set(current.map(shareRecordKey));
     const incoming=decodedRecords.map((r,i)=>({...r,id:r.id||`a3-import-${Date.now()}-${i}`,version:APP_VERSION})).filter(r=>!seen.has(shareRecordKey(r)));
-    if(!incoming.length){status.textContent='追加できる新しい試合記録はありません。重複は追加していません。';return;}
-    if(!confirm(`${incoming.length}件の試合記録を現在のデータに追加します。よろしいですか？`))return;
+    if(!incoming.length){status.textContent='追加できる新しい戦闘記録はなかったにゃ。重複は追加していないにゃ🐾';return;}
+    if(!confirm(`${incoming.length}件の戦闘記録を今のデータに追加するにゃ。よろしいかにゃ？`))return;
     saveRecords([...current,...incoming]);
-    status.textContent=`${incoming.length}件をA3から追加しました。既存データは上書きしていません。`;
+    status.textContent=`${incoming.length}件をA3から追加したにゃ。今ある記録は上書きしていないにゃ🐾`;
     renderHome();
     return;
   }
@@ -1203,10 +1422,10 @@ function importShareCode(){
       const seen=new Set(current.map(shareRecordKey));
       const incoming=full.records.filter(x=>!seen.has(shareRecordKey(x)));
       if(!incoming.length){
-        status.textContent='追加できる新しい試合記録はありません。重複は追加していません。';
+        status.textContent='追加できる新しい戦闘記録はなかったにゃ。重複は追加していないにゃ🐾';
         return;
       }
-      if(!confirm(`${incoming.length}件の試合記録を現在のデータに追加します。よろしいですか？`))return;
+      if(!confirm(`${incoming.length}件の戦闘記録を今のデータに追加するにゃ。よろしいかにゃ？`))return;
       saveRecords([...current,...incoming]);
       if(Array.isArray(full.goalHistory)){
         const old=goalHistory();
@@ -1214,7 +1433,7 @@ function importShareCode(){
         const newGoals=full.goalHistory.filter(x=>!goalSeen.has(JSON.stringify(x)));
         saveGoalHistory([...old,...newGoals].slice(-100));
       }
-      status.textContent=`${incoming.length}件を追加しました。既存データは上書きしていません。`;
+      status.textContent=`${incoming.length}件を追加したにゃ。今ある記録は上書きしていないにゃ🐾`;
       renderHome();
       return;
     }
@@ -1229,10 +1448,10 @@ function importShareCode(){
     const seen=new Set(current.map(shareRecordKey));
     const incoming=data.records.filter(x=>!seen.has(shareRecordKey(x)));
     if(!incoming.length){
-      status.textContent='追加できる新しい試合記録はありません。重複は追加していません。';
+      status.textContent='追加できる新しい戦闘記録はなかったにゃ。重複は追加していないにゃ🐾';
       return;
     }
-    if(!confirm(`${incoming.length}件の試合記録を現在のデータに追加します。よろしいですか？`))return;
+    if(!confirm(`${incoming.length}件の戦闘記録を今のデータに追加するにゃ。よろしいかにゃ？`))return;
     saveRecords([...current,...incoming]);
     if(Array.isArray(data.goalHistory)){
       const old=goalHistory();
@@ -1240,16 +1459,16 @@ function importShareCode(){
       const newGoals=data.goalHistory.filter(x=>!goalSeen.has(JSON.stringify(x)));
       saveGoalHistory([...old,...newGoals].slice(-100));
     }
-    status.textContent=`${incoming.length}件を追加しました。既存データは上書きしていません。`;
+    status.textContent=`${incoming.length}件を追加したにゃ。今ある記録は上書きしていないにゃ🐾`;
     renderHome();
   }catch(e){
-    status.textContent='共有コードを読み込めませんでした。コードが壊れているか、形式が違います。';
+    status.textContent='にゃん…？共有コードを読み込めなかったにゃ。コードが壊れているか、形式が違うみたいにゃ。もう一度確認してみてほしいにゃ🐾';
   }
 }
 
 function resetData(){
-  if(!confirm('保存した記録・目標履歴・途中保存をすべて削除します。よろしいですか？'))return;
-  if(!confirm('本当に削除しますか？この操作は元に戻せません。'))return;
+  if(!confirm('保存した記録・目標履歴・途中保存をすべて削除するにゃ。本当に削除してよいかにゃ？'))return;
+  if(!confirm('この操作は元に戻せないにゃ。それでも削除するかにゃ？'))return;
   localStorage.removeItem(RECORD_KEY);
   localStorage.removeItem(DRAFT_KEY);
   localStorage.removeItem(GOAL_HISTORY_KEY);
@@ -1269,7 +1488,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   const box=document.createElement('div');
   box.id='fatalFallback';
   box.style.cssText='display:none;position:fixed;inset:0;z-index:99999;background:#fff;padding:28px;text-align:center';
-  box.innerHTML='<h2>⚠️ 一時的なエラー</h2><p>ページを再読み込みしてください。</p><button onclick="location.reload()">再読み込み</button>';
+  box.innerHTML='<h2>⚠️ 一時的なエラー</h2><p>にゃん…？一時的なエラーが起きたにゃ。ページを再読み込みしてみてほしいにゃ🐾</p><button onclick="location.reload()">再読み込み</button>';
   document.body.appendChild(box);
   renderHome();
 });
