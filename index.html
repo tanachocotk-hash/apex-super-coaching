@@ -62,9 +62,12 @@ details summary{cursor:pointer;font-weight:800}.answer-row{display:flex;justify-
   </div>
 
   <div class="card">
-    <h2>🎯 今日の目標</h2>
+    <h2>🐾 今日の目標</h2>
     <div id="todayGoal" class="goal">今日の目標を選んでるにゃ…</div>
     <div id="goalReason" class="muted"></div>
+    <p><b>意識すること</b></p>
+    <p id="todayGoalCue"></p>
+    <div id="todayGoalReflection"></div>
   </div>
 
   <div class="card">
@@ -76,6 +79,7 @@ details summary{cursor:pointer;font-weight:800}.answer-row{display:flex;justify-
       <button onclick="startReview('simple')">⚡ 簡易記録（10問）</button>
       <button onclick="navigate('growth')">📊 成長を見る</button>
       <button onclick="navigate('weakness')">🧠 現状分析・対策</button>
+      <button onclick="navigate('coachCard')">🐾 個人コーチングカルテ</button>
       <button onclick="navigate('practice')">🏋️ 練習する</button>
       <button onclick="navigate('history')">📚 過去の記録</button>
       <button onclick="navigate('strong')">🏆 最強を目指す</button>
@@ -133,6 +137,11 @@ details summary{cursor:pointer;font-weight:800}.answer-row{display:flex;justify-
   <div id="weaknessContent"></div>
 </section>
 
+<section id="coachCard" class="screen">
+  <button class="secondary" onclick="navigate('home')">🏠 メニューへ戻る</button>
+  <div id="coachCardContent"></div>
+</section>
+
 <section id="practice" class="screen">
   <button class="secondary" onclick="navigate('home')">🏠 メニューへ戻る</button>
   <div id="practiceContent"></div>
@@ -165,6 +174,8 @@ const APP_VERSION=5;
 const RECORD_KEY='apex_super_coach_records_v5';
 const DRAFT_KEY='apex_super_coach_draft_v5';
 const GOAL_HISTORY_KEY='apex_super_coach_goal_history_v5';
+const COACH_STATE_KEY='nekoaching_personal_coach_v1';
+const DAILY_GOAL_KEY='nekoaching_daily_action_goal_v1';
 const LEGENDS=['オルター','アッシュ','アクセル','バリスティック','バンガロール','ブラッドハウンド','カタリスト','コースティック','コンジット','クリプト','ヒューズ','ジブラルタル','ホライゾン','ライフライン','ローバ','マッドマギー','ミラージュ','ニューキャッスル','オクタン','パスファインダー','ランパート','レヴナント','シア','スパロー','ヴァルキリー','ヴァンテージ','ワットソン','レイス'];
 
 const QUESTIONS=[
@@ -282,12 +293,29 @@ const QUESTIONS=[
 
 ];
 
+function abilityTagsForQuestion(q){
+  const text=`${q.id} ${q.title} ${q.group||''}`;
+  const rules=[
+    [/遮蔽|被弾|リロード|回復|cover|reload|heal|armor/i,'基礎'],
+    [/エイム|追い|プリエイム|tracking|preaim|hipfire/i,'エイム'],
+    [/カバー|味方|連携|孤立|フォーカス|合流|team|coverLow|coverReceived/i,'味方との連携'],
+    [/判断|詰め|引く|撤退|戦闘|retreat|push|engage/i,'戦闘判断'],
+    [/位置|高所|展開|射線|ピーク|角度|position|angle|repeek|expand|high/i,'位置取り・射線'],
+    [/エリア|サークル|安置|漁夫|ミラー|部隊|終盤|circle|mirror|threeSquad|endgame/i,'エリア・終盤'],
+    [/グレネード|grenade/i,'グレネード'],
+    [/準備|弾薬|ammo/i,'戦闘準備']
+  ];
+  return rules.filter(([pattern])=>pattern.test(text)).map(([,tag])=>tag);
+}
+
 QUESTIONS.forEach(q=>{
   if(!Number.isFinite(q.weight))q.weight=q.importance>=3?5:q.importance===2?2:1;
   q.questionId=q.id;
   q.category=q.category||q.group||'分野未設定';
   q.importanceTier=q.weight>=5?'S':q.weight>=3?'A':q.weight>=2?'B':'C';
   q.level=q.level||(['repeek','expand','reposition','multiAngle','createOwnAngle','enemyRotateAwareness','abilitySupportTeam','avoidThirdParty','engage','lowEnemyPush','expandWithSupport','retreatOutnumbered','checkEnemyLine','checkBeforeRepeek','grenadeMoveEnemy','secureKnockThenReset','stopWhenDisadvantaged','pushWhenKnockAdvantage','crossfireAngle','pathExpandSafe','pathHighGroundAlly','alterEscapeRoute'].includes(q.id)?'intermediate':'basic');
+  q.skillLevel=q.level;
+  q.tags=[...new Set([q.category,...abilityTagsForQuestion(q)])];
 });
 
 const TIPS=[
@@ -403,6 +431,33 @@ const PRACTICE={
   wattsonPylonTeam:'フェンスやパイロンを味方が使える範囲に置き、守る場所と退路を共有する。'
 };
 
+const DAILY_ACTION_GOALS=[
+  {id:'cover',title:'遮蔽を使って撃ち合おう！',cue:'撃つ前に、すぐ隠れられる場所を1つ確認するにゃ。大きく削られたら遮蔽へ戻ろう。',questionIds:['cover','coverBeforeStart','fastCoverAfterDamage','reloadBehindCover'],level:'basic',priority:12},
+  {id:'stayWithTeam',title:'味方をカバーできる距離で戦おう！',cue:'接敵したら、味方の位置を一度見て、カバーが届く距離を保つにゃ。',questionIds:['stayWithTeam','coverReceived','coverLow','deathTeamDistance'],level:'basic',priority:9},
+  {id:'high',title:'撃ち合う前に、有利な位置を探そう！',cue:'敵を撃つ前に、高所や遮蔽など有利に使える位置があるか確認するにゃ。',questionIds:['high','position','pathHighGroundAlly'],level:'basic',priority:8},
+  {id:'focus',title:'味方と同じ敵を狙おう！',cue:'味方が撃っている敵を確認して、同じ相手へ照準を合わせるにゃ。',questionIds:['focus','syncFire','chooseTargetTogether','callEnemyFocus'],level:'basic',priority:8},
+  {id:'preaim',title:'敵が出てきそうな場所に照準を置こう！',cue:'角や出入口を通る前に、敵が現れそうな位置へ照準を合わせておくにゃ。',questionIds:['preaim'],level:'basic',priority:7},
+  {id:'tracking',title:'敵の動きに照準を合わせ続けよう！',cue:'撃っている間、敵の移動に合わせて照準を動かすことを意識するにゃ。',questionIds:['tracking','closeHipfire'],level:'basic',priority:7},
+  {id:'heal',title:'回復やリロードは遮蔽を使おう！',cue:'回復やリロードを始める前に、敵の射線が切れる場所へ入るにゃ。',questionIds:['heal','cellTiming','reloadBehindCover','protectHealTime'],level:'basic',priority:8},
+  {id:'checkEscapeRoute',title:'接敵前に、退路を1つ確認しよう！',cue:'撃ち合いを始める前に、危険になった時に移動できる場所を1つ見つけるにゃ。',questionIds:['checkEscapeRoute','deathEscapeRoute'],level:'basic',priority:7},
+  {id:'checkEnemyLine',title:'敵の射線を確認してから体を出そう！',cue:'遮蔽から出る前に、どの敵から見られているか一度確認するにゃ。',questionIds:['checkEnemyLine','multiAngle','deathCrossfire'],level:'basic',priority:8},
+  {id:'checkBeforeRepeek',title:'もう一度撃つ前に、敵と味方の位置を見よう！',cue:'同じ場所から再び撃つ前に、敵の照準と味方の位置を確認するにゃ。',questionIds:['checkBeforeRepeek','repeek','deathOverpeek'],level:'intermediate',priority:7},
+  {id:'expandWithSupport',title:'展開する前に、味方のカバーが届くか確認しよう！',cue:'別の角度へ動く前に、味方からカバーを受けられる距離か確認するにゃ。',questionIds:['expandWithSupport','isolate','createOwnAngle'],level:'intermediate',priority:7},
+  {id:'finish',title:'不利になったら、遮蔽まで下がる選択肢を考えよう！',cue:'体力や位置が不利になった時、撃ち続ける以外に遮蔽へ下がる手も比べるにゃ。',questionIds:['finish','stopWhenDisadvantaged','retreatOutnumbered','deathRetreatTiming'],level:'basic',priority:9},
+  {id:'lowEnemyPush',title:'敵を大きく削ったら、攻めるか一度考えよう！',cue:'削った直後に飛び出す前に、味方の位置と敵の射線を見てから選ぶにゃ。',questionIds:['lowEnemyPush','engage','pushWhenKnockAdvantage','retreatMissedAdvantage'],level:'intermediate',priority:7},
+  {id:'grenade',title:'グレネードで敵の位置を動かそう！',cue:'敵が遮蔽に隠れていたら、味方が撃てる方向へ動かせるか考えて投げるにゃ。',questionIds:['grenade','grenadeMoveEnemy','fuseGrenadePressure'],level:'basic',priority:6},
+  {id:'avoidThirdParty',title:'戦闘中、別部隊が来る方向を一度確認しよう！',cue:'撃ち合いの区切りで、銃声や敵が来そうな方向を確認するにゃ。',questionIds:['avoidThirdParty','enemyRotateAwareness'],level:'intermediate',priority:6},
+  {id:'ammoCheck',title:'接敵前に、弾薬と回復の残量を確認しよう！',cue:'敵を見つけた時、撃ち始める前に弾薬と回復が足りるか見るにゃ。',questionIds:['ammoCheck'],level:'basic',priority:6},
+  {id:'circleAreaControl',title:'移動前に、次のリングと安全なルートを見よう！',cue:'次のリングを確認して、遮蔽を使って移動できる道を考えるにゃ。',questionIds:['circleAreaControl','backToZone','enemyRotateAwareness'],level:'advanced',priority:5},
+  {id:'circleTeamShape',title:'終盤は、味方と守れるエリアを確認しよう！',cue:'味方の位置と敵の侵入方向を見て、チームで維持できる範囲を考えるにゃ。',questionIds:['circleTeamShape','threeSquadDecision','purposefulEndgameFight','mirrorCare'],level:'advanced',priority:5}
+];
+const DAILY_GOAL_REFLECTIONS={
+  applied:{label:'意識して実践できた！',feedback:'にゃいす！！ 意識して行動できたのは大きな一歩にゃ！次も同じ場面で試してみよう🐾'},
+  attempted:{label:'意識したけれど、うまくできなかった',feedback:'挑戦したのはえらいにゃ！次は戦闘が始まる前に、準備できることを1つ試してみよう🐾'},
+  forgot:{label:'意識するのを忘れていた',feedback:'気づけたのが次につながるにゃ。次は接敵した時に思い出せる合図を1つ決めてみよう🐾'},
+  no_opportunity:{label:'今回は実践する場面がなかった',feedback:'今回は練習する場面がなかったにゃ。失敗扱いにはしないにゃ。次の戦闘でも機会があれば意識してみよう🐾'}
+};
+
 /* =========================
    STATE / STORAGE
 ========================= */
@@ -416,6 +471,12 @@ function records(){
   return Array.isArray(x)?x:[];
 }
 function saveRecords(x){localStorage.setItem(RECORD_KEY,JSON.stringify(x))}
+function coachState(){
+  const state=parseJSON(localStorage.getItem(COACH_STATE_KEY),'null');
+  return state&&typeof state==='object'?state:{challenge:null,history:[]};
+}
+function saveCoachState(state){localStorage.setItem(COACH_STATE_KEY,JSON.stringify(state))}
+function allRecordedBattles(){return records().flatMap(s=>(s.matches||[]).map(m=>({...m,setDate:s.date||m.date||''})));}
 function goalHistory(){
   const x=parseJSON(localStorage.getItem(GOAL_HISTORY_KEY),'[]');
   return Array.isArray(x)?x:[];
@@ -461,6 +522,7 @@ function navigate(id){
   if(id==='review')openReview();
   if(id==='growth')renderGrowth();
   if(id==='weakness')renderWeakness();
+  if(id==='coachCard')renderCoachCard();
   if(id==='practice')renderPractice();
   if(id==='history')renderHistory();
   if(id==='strong')renderStrong();
@@ -490,7 +552,12 @@ function eligibleQuestionPool(outcome){
 }
 
 function chooseWeightedQuestion(pool){
-  const effectiveWeight=q=>Math.pow(Math.max(0.01,Number(q.weight)||1),2);
+  const challenge=coachState().challenge;
+  const effectiveWeight=q=>{
+    const base=Math.pow(Math.max(0.01,Number(q.weight)||1),2);
+    const related=challenge?.status==='active'&&q.tags?.some(tag=>challenge.tags?.includes(tag));
+    return base*(related?2.25:1);
+  };
   const total=pool.reduce((sum,q)=>sum+effectiveWeight(q),0);
   let roll=Math.random()*total;
   for(const q of pool){roll-=effectiveWeight(q);if(roll<0)return q;}
@@ -789,6 +856,7 @@ function finishMatch(){
       matches:appState.matches
     });
     saveRecords(rs);
+    evaluateCoachChallengeForNewRecord();
     clearDraft();
     appState=null;
     document.getElementById('questionArea').innerHTML=`
@@ -870,45 +938,180 @@ function weaknessScores(){
   }).sort((a,b)=>b.score-a.score);
 }
 
-/* Goal selection:
-   - No data: random.
-   - Some data: weighted by weakness + importance + recency, while
-     reducing repetition so it doesn't pick the same goal forever.
-*/
-function selectTodayGoal(){
-  const pool=QUESTIONS.filter(q=>!q.death&&!q.postbattle);
-  const rs=records(), gh=goalHistory();
-  let candidates=pool.map(q=>({q,weight:1}));
-  if(rs.length===0){
-    const q=pool[Math.floor(Math.random()*pool.length)];
-    return {q,reason:'まだ記録がないにゃ。まずは今日の目標を一緒に選んでみるにゃ🐾'};
-  }
-  const st=answerStats();
-  candidates=candidates.map(({q})=>{
-    const x=st[q.id]||{yes:0,no:0,na:0,total:0};
-    const rate=x.total?x.no/x.total:0;
-    const times=gh.filter(g=>g.id===q.id).length;
-    const last=gh.slice().reverse().find(g=>g.id===q.id);
-    const daysSince=last?Math.max(0,(Date.now()-new Date(last.at).getTime())/86400000):999;
-    const novelty=Math.min(daysSince/7,1);
-    const weight=0.7+(rate*4.0)+(q.importance*0.65)+(novelty*0.8)-(times*0.18);
-    return {q,weight:Math.max(.08,weight)};
+function dailyGoalState(){
+  const state=parseJSON(localStorage.getItem(DAILY_GOAL_KEY),'null');
+  return state&&typeof state==='object'?state:{date:'',goalId:'',reflection:null,history:[]};
+}
+function saveDailyGoalState(state){localStorage.setItem(DAILY_GOAL_KEY,JSON.stringify(state))}
+function dailyGoalEvidence(goal,matches){
+  const byId={};let yes=0,no=0,total=0;const seenBattles=new Set();
+  (goal.questionIds||[]).forEach(id=>{byId[id]=true});
+  (matches||[]).forEach((m,index)=>{
+    let used=false;
+    Object.entries(m.answers||{}).forEach(([id,value])=>{
+      if(!byId[id]||!['yes','no'].includes(value))return;
+      if(value==='yes')yes++;else no++;total++;used=true;
+    });
+    if(used)seenBattles.add(m.completedAt||`${m.date||''}-${m.match||index}`);
   });
-  const total=candidates.reduce((a,b)=>a+b.weight,0);
-  let r=Math.random()*total;
-  let chosen=candidates[candidates.length-1].q;
-  for(const c of candidates){r-=c.weight;if(r<=0){chosen=c.q;break}}
-  const x=st[chosen.id]||{no:0,total:0};
-  const reason=x.total?`過去の記録で「できなかった」が ${x.no}/${x.total} 回あったにゃ。重要度も考えて選んだにゃ。`:'記録が少ない項目から、ランダム性を残して選んだにゃ🐾';
-  gh.push({id:chosen.id,at:new Date().toISOString()});
-  saveGoalHistory(gh.slice(-100));
-  return {q:chosen,reason};
+  return {yes,no,total,battles:seenBattles.size,failRate:total?no/total:null};
+}
+function chooseTodayActionGoal(){
+  const state=dailyGoalState(),today=dateJP();
+  const saved=DAILY_ACTION_GOALS.find(goal=>goal.id===state.goalId);
+  if(state.date===today&&saved)return {goal:saved,reason:state.reason||'今日はこの行動を意識してみるにゃ🐾',state};
+  const matches=allRecordedBattles(),mastery=foundationMastery();
+  const recent=(state.history||[]).filter(item=>{
+    const age=(Date.parse(today+'T00:00:00')-Date.parse((item.date||'')+'T00:00:00'))/86400000;
+    return Number.isFinite(age)&&age>=0&&age<7;
+  });
+  const candidates=DAILY_ACTION_GOALS.filter(goal=>goal.level==='basic'||(goal.level==='intermediate'&&mastery.ready)||(goal.level==='advanced'&&mastery.ready&&matches.length>=10));
+  const ranked=candidates.map(goal=>{
+    const evidence=dailyGoalEvidence(goal,matches);
+    const importance=Math.max(...goal.questionIds.map(id=>QUESTIONS.find(q=>q.id===id)?.importance||1));
+    const evidenceScore=evidence.total>=2?(evidence.failRate*4+(importance/3)+Math.min(1,evidence.total/6)*.5):0;
+    const recentPenalty=recent.filter(item=>item.goalId===goal.id).length*3;
+    return {goal,evidence,score:(goal.priority*.08)+evidenceScore-recentPenalty};
+  });
+  const notRecent=ranked.filter(item=>!recent.some(entry=>entry.goalId===item.goal.id));
+  const choices=(notRecent.length?notRecent:ranked).sort((a,b)=>b.score-a.score);
+  const topScore=choices[0]?.score||0;
+  const nearTop=choices.filter(item=>item.score>=topScore-.15).slice(0,3);
+  const selected=nearTop[Math.floor(Math.random()*nearTop.length)]||choices[0];
+  const evidence=selected.evidence;
+  const reason=evidence.total>=2
+    ?`関連する記録では「できなかった」が${evidence.no}/${evidence.total}回答だったにゃ。重要度と最近の目標も見て選んだにゃ。`
+    :'まだ苦手を決められるだけの回答が少ないため、すぐ実践しやすい基本行動から選んだにゃ。';
+  const next={date:today,goalId:selected.goal.id,reflection:null,reason,history:[...(state.history||[]),{goalId:selected.goal.id,date:today}].slice(-60)};
+  saveDailyGoalState(next);
+  return {goal:selected.goal,reason,state:next};
+}
+function saveTodayGoalReflection(value){
+  if(!DAILY_GOAL_REFLECTIONS[value])return;
+  const state=dailyGoalState();
+  if(state.date!==dateJP()||!DAILY_ACTION_GOALS.some(goal=>goal.id===state.goalId))return;
+  state.reflection={value,savedAt:new Date().toISOString()};
+  saveDailyGoalState(state);renderHome();
+}
+function renderTodayGoalReflection(state){
+  const host=document.getElementById('todayGoalReflection');if(!host)return;
+  const selected=state.reflection?.value;
+  const feedback=selected?DAILY_GOAL_REFLECTIONS[selected]?.feedback:'';
+  host.innerHTML=`<p><b>プレイ後の振り返り</b></p><div class="grid two">${Object.entries(DAILY_GOAL_REFLECTIONS).map(([id,item])=>`<button type="button" class="${selected===id?'':'secondary'}" onclick="saveTodayGoalReflection('${id}')">${escapeHTML(item.label)}</button>`).join('')}</div>${feedback?`<p class="notice">${escapeHTML(feedback)}</p><p class="mini">回答はこの端末に保存済み。選び直すと振り返りを更新できるにゃ。</p>`:'<p class="mini">勝敗ではなく、目標への取り組みを選ぶにゃ。「場面がなかった」は失敗に含めないにゃ。</p>'}`;
+}
+
+function questionEvidence(matches){
+  const stats={};
+  (matches||[]).forEach((m,mi)=>{
+    Object.entries(m.answers||{}).forEach(([id,value])=>{
+      const q=QUESTIONS.find(item=>item.id===id);
+      if(!q||q.death||value==='na'||!['yes','no'].includes(value))return;
+      (q.tags||[q.category||q.group]).forEach(tag=>{
+        stats[tag]??={yes:0,no:0,battles:new Set(),outcomes:{survived:0,death:0,retreat:0}};
+        stats[tag][value]++;
+        stats[tag].battles.add(m.completedAt||`${m.date||''}-${m.match||mi}`);
+        const outcome=m.engagementOutcome||'unknown';
+        if(stats[tag].outcomes[outcome]!==undefined)stats[tag].outcomes[outcome]++;
+      });
+    });
+  });
+  return Object.fromEntries(Object.entries(stats).map(([tag,x])=>[tag,{yes:x.yes,no:x.no,total:x.yes+x.no,battles:x.battles.size,outcomes:x.outcomes,rate:(x.yes+x.no)?x.yes/(x.yes+x.no):null}]));
+}
+function questionEvidenceForQuestion(matches,q){
+  let yes=0,no=0,battles=0;
+  (matches||[]).forEach(m=>{
+    const value=m.answers?.[q.id];
+    if(value==='yes'||value==='no'){if(value==='yes')yes++;else no++;battles++;}
+  });
+  return {yes,no,total:yes+no,battles,rate:yes+no?yes/(yes+no):null};
+}
+function coachingChallengeCandidate(){
+  const matches=allRecordedBattles(),state=coachState();
+  const mastery=foundationMastery();
+  const eligible=QUESTIONS.filter(q=>!q.death&&!q.postbattle&&(mastery.ready||q.level==='basic'));
+  const ranked=eligible.map(q=>{
+    const e=questionEvidenceForQuestion(matches,q);
+    if(e.total<2||e.battles<2)return null;
+    const confidence=Math.min(1,e.total/6)*Math.min(1,e.battles/3);
+    const repeatPenalty=(state.history||[]).filter(h=>h.questionId===q.id).length;
+    return {q,e,score:(1-e.rate)*(q.importance/3)*confidence-repeatPenalty*.04};
+  }).filter(x=>x&&x.e.rate<.78).sort((a,b)=>b.score-a.score);
+  return ranked[0]||null;
+}
+function assignCoachChallenge(){
+  const candidate=coachingChallengeCandidate();
+  if(!candidate){renderCoachCard();return;}
+  const state=coachState();
+  const challenge={
+    questionId:candidate.q.id,title:candidate.q.title,category:candidate.q.category,
+    tags:[...(candidate.q.tags||[])],level:candidate.q.level,
+    practice:PRACTICE[candidate.q.id]||`${candidate.q.category}に関係する場面で、選べる行動を一度確認してから実行する。`,
+    baselineRate:candidate.e.rate,baselineAnswers:candidate.e.total,
+    startBattleCount:allRecordedBattles().length,completedBattles:0,status:'active',createdAt:new Date().toISOString()
+  };
+  state.challenge=challenge;
+  state.history=[...(state.history||[]),{questionId:challenge.questionId,title:challenge.title,at:challenge.createdAt}].slice(-50);
+  saveCoachState(state);renderCoachCard();
+}
+function startSameCoachChallenge(){
+  const state=coachState(),old=state.challenge;
+  if(!old)return;
+  old.startBattleCount=allRecordedBattles().length;old.completedBattles=0;old.status='active';old.review=null;
+  const baseline=questionEvidenceForQuestion(allRecordedBattles(),QUESTIONS.find(q=>q.id===old.questionId)||{});
+  old.baselineRate=baseline.rate;old.baselineAnswers=baseline.total;old.createdAt=new Date().toISOString();
+  saveCoachState(state);renderCoachCard();
+}
+function evaluateCoachChallengeForNewRecord(){
+  const state=coachState(),challenge=state.challenge;
+  if(!challenge||challenge.status!=='active')return;
+  challenge.completedBattles=Math.max(0,allRecordedBattles().length-(challenge.startBattleCount||0));
+  if(challenge.completedBattles<3){saveCoachState(state);return;}
+  const q=QUESTIONS.find(item=>item.id===challenge.questionId);
+  const all=allRecordedBattles(),baseline=all.slice(0,challenge.startBattleCount||0),period=all.slice(challenge.startBattleCount||0,(challenge.startBattleCount||0)+3);
+  const before=questionEvidenceForQuestion(baseline,q||{}),after=questionEvidenceForQuestion(period,q||{});
+  let result='insufficient';
+  if(before.total>=2&&after.total>=2&&before.rate!==null&&after.rate!==null){
+    result=after.rate-before.rate>=.1?'improved':after.rate-before.rate<=-.1?'needs-work':'steady';
+  }
+  challenge.status='review';
+  challenge.review={result,beforeRate:before.rate,afterRate:after.rate,beforeAnswers:before.total,afterAnswers:after.total,periodBattles:Math.min(3,period.length),at:new Date().toISOString()};
+  saveCoachState(state);
+}
+function renderCoachCard(){
+  const host=document.getElementById('coachCardContent');if(!host)return;
+  const matches=allRecordedBattles(),state=coachState(),challenge=state.challenge,evidence=questionEvidence(matches);
+  const abilityNames=[...new Set(QUESTIONS.filter(q=>!q.death&&!q.postbattle).flatMap(q=>q.tags||[]))];
+  const abilityHtml=abilityNames.map(name=>{
+    const x=evidence[name];
+    if(!x||x.total<3||x.battles<2)return `<div class="growth-row"><div class="growth-flex"><b>${escapeHTML(name)}</b><span>データ不足</span></div><div class="mini">評価材料がまだ少ないにゃ（回答 ${x?.total||0}件／対象戦闘 ${x?.battles||0}件）。</div></div>`;
+    const recent=questionEvidence(matches.slice(-10))[name];
+    const prior=questionEvidence(matches.slice(0,Math.max(0,matches.length-10)))[name];
+    let trend='記録を蓄積中';
+    if(recent?.total>=2&&prior?.total>=2){const delta=recent.rate-prior.rate;trend=delta>=.1?'改善傾向':delta<=-.1?'課題が継続':'おおむね安定';}
+    const label=x.rate>=.75?'安定':x.rate<.5?'練習候補':'伸びしろ';
+    const outcomes=`生存 ${x.outcomes.survived}・死亡 ${x.outcomes.death}・撤退 ${x.outcomes.retreat}`;
+    return `<div class="growth-row"><div class="growth-flex"><b>${escapeHTML(name)}</b><b>${label}　${Math.round(x.rate*100)}%</b></div><div class="growth-bar"><span style="width:${Math.round(x.rate*100)}%"></span></div><div class="mini">${trend}　｜　○${x.yes} ×${x.no}／${x.total}回答・${x.battles}戦闘　｜　結果分類：${outcomes}</div></div>`;
+  }).join('');
+  let challengeHtml='';
+  if(challenge?.status==='active'){
+    challengeHtml=`<div class="card notice"><h3>🐾 今回のねこコーチ課題にゃ！</h3><p><b>「${escapeHTML(challenge.title)}」</b></p><p>${escapeHTML(catCoachLine(challenge.practice))}</p><p>対象の記録：${Math.min(3,challenge.completedBattles||0)} / 3戦闘。回答は振り返り材料として使い、達成を自動断定しないにゃ。</p><p class="mini">関連タグ：${escapeHTML((challenge.tags||[]).join('・'))}</p></div>`;
+  }else if(challenge?.status==='review'){
+    const r=challenge.review||{},message=r.result==='improved'?`にゃいす！！「${challenge.title}」は前より改善が見られるにゃ（${r.beforeRate===null?'—':Math.round(r.beforeRate*100)+'%'} → ${r.afterRate===null?'—':Math.round(r.afterRate*100)+'%'}、各${r.beforeAnswers||0}件／${r.afterAnswers||0}件）。`:r.result==='needs-work'?`まだ伸びしろがあるにゃん。「${challenge.title}」は比較期間で${Math.round((r.afterRate||0)*100)}%だったにゃ。今回の3戦闘だけで能力を決めつけず、練習を続けるか次の課題を選べるにゃ。`:r.result==='steady'?`「${challenge.title}」は前後で大きな変化が確認できなかったにゃ（${Math.round((r.beforeRate||0)*100)}% → ${Math.round((r.afterRate||0)*100)}%）。`: `「${challenge.title}」は比較できる回答が足りず、改善を判定できなかったにゃ。もう少し記録を集めるにゃん！`;
+    challengeHtml=`<div class="card ${r.result==='improved'?'good':'notice'}"><h3>🔎 3戦闘後の再評価</h3><p>${escapeHTML(catCoachLine(message))}</p><p class="mini">課題：${escapeHTML(challenge.title)}　｜　比較：${r.beforeAnswers||0}回答 → ${r.afterAnswers||0}回答</p><div class="grid two"><button onclick="assignCoachChallenge()">次の課題を提案</button><button class="secondary" onclick="startSameCoachChallenge()">同じ課題を続ける</button></div></div>`;
+  }else{
+    challengeHtml=`<div class="card"><h3>🎯 次の3戦闘で取り組む課題</h3><p>十分な回答根拠がある項目から、基礎を優先して課題を選ぶにゃ。まだ候補がなければ、記録を重ねるにゃ。</p><button onclick="assignCoachChallenge()">記録から課題を提案</button></div>`;
+  }
+  const candidates=QUESTIONS.filter(q=>!q.death&&!q.postbattle).map(q=>({...q,e:questionEvidenceForQuestion(matches,q)})).filter(x=>x.e.total>=2).sort((a,b)=>(b.e.no/Math.max(1,b.e.total))-(a.e.no/Math.max(1,a.e.total))).slice(0,3);
+  const candidatesHtml=candidates.length?`<div class="card"><h3>🔎 根拠のある課題候補</h3>${candidates.map(x=>`<div class="growth-row"><b>${escapeHTML(x.title)}</b><div class="mini">×${x.e.no}／${x.e.total}回答　・　重要度${x.importance}/3　・　${x.e.battles}戦闘。候補として表示しており、単独で苦手と断定しないにゃ。</div></div>`).join('')}</div>`:`<div class="card"><p>回答根拠が足りないため、課題候補はまだ順位付けしないにゃ。まず記録を増やそう🐾</p></div>`;
+  host.innerHTML=`<div class="card"><h2>🐾 個人専用コーチングカルテ</h2><p>記録された質問回答を能力タグごとに集計しているにゃ。死亡・撤退は結果分類として区別し、ノック数だけで判断力を評価しないにゃ。</p><div class="statgrid"><div class="stat">対象戦闘<br><b>${matches.length}</b></div><div class="stat">回答データ<br><b>${matches.reduce((n,m)=>n+Object.values(m.answers||{}).filter(v=>v==='yes'||v==='no').length,0)}</b></div></div></div>${challengeHtml}<div class="card"><h3>📋 能力別カルテ</h3>${abilityHtml||'<p>まだ記録がないにゃ。戦闘を振り返るとカルテが育つにゃ🐾</p>'}</div>${candidatesHtml}<div class="card"><h3>🗂️ 課題履歴</h3>${(state.history||[]).length?(state.history||[]).slice().reverse().map(h=>`<div class="growth-row">${escapeHTML(h.title)}<div class="mini">${escapeHTML(h.at||'')}</div></div>`).join(''):'<p class="muted">課題を設定すると、ここに履歴が残るにゃ。</p>'}</div>`;
 }
 
 function renderHome(){
-  const goal=selectTodayGoal();
-  document.getElementById('todayGoal').textContent=goal.q.title;
+  const goal=chooseTodayActionGoal();
+  document.getElementById('todayGoal').textContent=goal.goal.title;
   document.getElementById('goalReason').textContent=catCoachLine(goal.reason);
+  document.getElementById('todayGoalCue').textContent=catCoachLine(goal.goal.cue);
+  renderTodayGoalReflection(goal.state);
   const d=new Date();
   document.getElementById('dailyTip').textContent=catCoachLine(TIPS[d.getDate()%TIPS.length]);
 }
@@ -1305,7 +1508,7 @@ function renderStrong(){
    BACKUP / RESTORE / RESET
 ========================= */
 function exportData(){
-  const payload={app:'Apex Super Coaching System',version:APP_VERSION,exportedAt:new Date().toISOString(),records:records(),goalHistory:goalHistory()};
+  const payload={app:'Apex Super Coaching System',version:APP_VERSION,exportedAt:new Date().toISOString(),records:records(),goalHistory:goalHistory(),dailyGoal:dailyGoalState()};
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
@@ -1324,6 +1527,7 @@ function importData(event){
     const merged=[...records(),...data.records];
     saveRecords(merged);
     if(Array.isArray(data.goalHistory))saveGoalHistory([...goalHistory(),...data.goalHistory].slice(-100));
+    if(data.dailyGoal&&typeof data.dailyGoal==='object'&&typeof data.dailyGoal.goalId==='string')saveDailyGoalState(data.dailyGoal);
     alert('バックアップを復元できたにゃ！記録を続けていこう🐾');
     renderHome();
   };
@@ -1467,11 +1671,13 @@ function importShareCode(){
 }
 
 function resetData(){
-  if(!confirm('保存した記録・目標履歴・途中保存をすべて削除するにゃ。本当に削除してよいかにゃ？'))return;
+  if(!confirm('保存した記録・目標履歴・今日の目標と振り返り・コーチング課題・課題履歴・途中保存をすべて削除するにゃ。本当に削除してよいかにゃ？'))return;
   if(!confirm('この操作は元に戻せないにゃ。それでも削除するかにゃ？'))return;
   localStorage.removeItem(RECORD_KEY);
   localStorage.removeItem(DRAFT_KEY);
   localStorage.removeItem(GOAL_HISTORY_KEY);
+  localStorage.removeItem(COACH_STATE_KEY);
+  localStorage.removeItem(DAILY_GOAL_KEY);
   appState=null;
   navigate('home');
 }
