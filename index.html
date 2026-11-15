@@ -596,17 +596,49 @@ function foundationMastery(){
   return {total,rate:total?yes/total:0,ready:total>=12&&yes/total>=0.72};
 }
 function knowledgeLevelLabel(level){return level==='advanced'?'上級':level==='intermediate'?'中級':'基礎';}
+const QUESTION_FAMILY_GROUPS={
+  cover:['cover','coverBeforeStart','fastCoverAfterDamage','deathCoverCause','survivalCoverTrade','bangaloreSmokeTeam','rampartAmpedAngle'],
+  teamSupport:['coverLow','coverReceived','stayWithTeam','preventEnemySplit','expandWithSupport','tradeDamage','makeSpace','protectHealTime','deathTeamDistance','octaneStimCover','pathExpandSafe','pathGrappleRegroup','retreatTogether'],
+  focus:['focus','syncFire','chooseTargetTogether','callEnemyFocus','bloodhoundScanCall','sparrowTrackerCall','vantageSpotterFocus','ballisticTempestTeam','seerScanCall'],
+  attackTiming:['engage','lowEnemyPush','pushWhenKnockAdvantage','secureKnockThenReset','retreatMissedAdvantage','survivalPushPurpose'],
+  retreat:['finish','retreatOutnumbered','stopWhenDisadvantaged','deathRetreatTiming','deathEscapeRoute','retreatEarlyRead','retreatAppropriate','retreatRoute','alterEscapeRoute','retreatNextFight'],
+  repeek:['repeek','checkBeforeRepeek','deathOverpeek'],
+  aim:['preaim','tracking','movement','closeHipfire'],
+  angles:['high','position','multiAngle','createOwnAngle','crossfireAngle','checkEnemyLine','deathCrossfire','survivalAngle','pathHighGroundAlly','horizonLiftTeam'],
+  reset:['armor','reset','postbattle','heal','reloadBehindCover','cellTiming','retreatRegroup','wraithPhaseTiming','catalystWallReset','gibraltarDomeReset'],
+  grenade:['grenade','grenadeMoveEnemy','fuseGrenadePressure','maggieDrillPush'],
+  rotation:['expand','enemyRotateAwareness','circleAreaControl','circleTeamShape','mirrorCare','backToZone','threeSquadDecision','purposefulEndgameFight','survivalAftermath','valkyrieSkywardTeam','alterPassageTeam','ashPhaseBreachTeam','octanePadTeam']
+};
+function questionFamily(q){
+  for(const [family,ids] of Object.entries(QUESTION_FAMILY_GROUPS))if(ids.includes(q.id))return family;
+  return q.id;
+}
+function questionExposureForSelection(){
+  const battles=[...allRecordedBattles(),...(appState?.matches||[])].slice(-3),exact={},families={};
+  battles.forEach(battle=>{
+    const seenFamilies=new Set();
+    Object.keys(battle.answers||{}).forEach(id=>{
+      const q=QUESTIONS.find(item=>item.id===id);
+      if(!q||q.death||q.postbattle)return;
+      exact[id]=(exact[id]||0)+1;seenFamilies.add(questionFamily(q));
+    });
+    seenFamilies.forEach(family=>families[family]=(families[family]||0)+1);
+  });
+  return {exact,families};
+}
 function eligibleQuestionPool(outcome){
   const mastered=foundationMastery().ready;
   return QUESTIONS.filter(q=>!q.death&&!q.postbattle&&q.id!=='comms'&&(!q.legend||q.legend===appState.currentBattleMeta?.legend)&&(!q.outcomes||q.outcomes.includes(outcome))&&(mastered||q.level!=='advanced'));
 }
 
-function chooseWeightedQuestion(pool){
+function chooseWeightedQuestion(pool,exposure={exact:{},families:{}}){
   const challenge=coachState().challenge;
   const effectiveWeight=q=>{
     const base=Math.pow(Math.max(0.01,Number(q.weight)||1),2);
     const related=challenge?.status==='active'&&q.tags?.some(tag=>challenge.tags?.includes(tag));
-    return base*(related?2.25:1);
+    const exactPenalty=1/(1+(exposure.exact[q.id]||0)*1.4);
+    const familyPenalty=1/(1+(exposure.families[questionFamily(q)]||0)*0.4);
+    return base*(related?2.25:1)*exactPenalty*familyPenalty;
   };
   const total=pool.reduce((sum,q)=>sum+effectiveWeight(q),0);
   let roll=Math.random()*total;
@@ -636,16 +668,22 @@ function pickBalancedWeightedQuestions(candidates,count,minHighWeight){
   return chosen;
 }
 /* Outcome-first, weighted, outcome-aware selection with stable saved order. */
-function pickBalancedWeightedQuestions(candidates,count,minHighWeight,initialChosen=[]){
-  const chosen=initialChosen.slice(),groupCounts={};
-  chosen.forEach(q=>{const category=q.category||q.group||'未分類';groupCounts[category]=(groupCounts[category]||0)+1;});
+function pickBalancedWeightedQuestions(candidates,count,minHighWeight,initialChosen=[],exposure={exact:{},families:{}}){
+  const chosen=initialChosen.slice(),groupCounts={},familyCounts={};
+  chosen.forEach(q=>{
+    const category=q.category||q.group||'未分類',family=questionFamily(q);
+    groupCounts[category]=(groupCounts[category]||0)+1;familyCounts[family]=(familyCounts[family]||0)+1;
+  });
   const addFrom=pool=>{
     const unused=pool.filter(q=>!chosen.some(x=>x.id===q.id));
-    const balanced=unused.filter(q=>(groupCounts[q.category||q.group||'未分類']||0)<2);
-    const source=balanced.length?balanced:unused;
+    const categoryBalanced=unused.filter(q=>(groupCounts[q.category||q.group||'未分類']||0)<2);
+    const familyBalanced=categoryBalanced.filter(q=>(familyCounts[questionFamily(q)]||0)<1);
+    const anyFreshFamily=unused.filter(q=>(familyCounts[questionFamily(q)]||0)<1);
+    const source=familyBalanced.length?familyBalanced:anyFreshFamily.length?anyFreshFamily:categoryBalanced.length?categoryBalanced:unused;
     if(!source.length)return false;
-    const q=chooseWeightedQuestion(source);chosen.push(q);
-    const category=q.category||q.group||'未分類';groupCounts[category]=(groupCounts[category]||0)+1;
+    const q=chooseWeightedQuestion(source,exposure);chosen.push(q);
+    const category=q.category||q.group||'未分類',family=questionFamily(q);
+    groupCounts[category]=(groupCounts[category]||0)+1;familyCounts[family]=(familyCounts[family]||0)+1;
     return true;
   };
   while(chosen.filter(q=>q.weight>=5).length<minHighWeight){if(!addFrom(candidates.filter(q=>q.weight>=5)))break;}
@@ -657,9 +695,9 @@ function buildBattleQuestionSelection(){
   const count=appState.recordingMode==='simple'?10:15;
   const pool=eligibleQuestionPool(outcome).filter(q=>appState.recordingMode!=='simple'||q.weight>=2||q.outcomes?.includes(outcome));
   const specific=pool.filter(q=>q.outcomes?.includes(outcome));
-  const required=Math.min(4,specific.length,count);
-  const first=pickBalancedWeightedQuestions(specific,required,Math.min(2,required));
-  return pickBalancedWeightedQuestions(pool,count,appState.recordingMode==='simple'?5:8,first).map(q=>q.id);
+  const required=Math.min(4,specific.length,count),exposure=questionExposureForSelection();
+  const first=pickBalancedWeightedQuestions(specific,required,Math.min(2,required),[],exposure);
+  return pickBalancedWeightedQuestions(pool,count,appState.recordingMode==='simple'?5:8,first,exposure).map(q=>q.id);
 }
 function buildSimpleBattleQuestionSelection(){return buildBattleQuestionSelection();}
 function questionForSlot(){
